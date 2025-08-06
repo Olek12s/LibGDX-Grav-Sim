@@ -32,6 +32,11 @@ import static org.lwjgl.system.JNI.invokePPZ;
 import static org.lwjgl.system.macosx.ObjCRuntime.objc_getClass;
 import static org.lwjgl.system.macosx.ObjCRuntime.sel_getUid;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL32.GL_PROGRAM_POINT_SIZE;
+
 /**
  * Adds some utilities to ensure that the JVM was started with the
  * {@code -XstartOnFirstThread} argument, which is required on macOS for LWJGL 3

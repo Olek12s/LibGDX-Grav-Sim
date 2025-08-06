@@ -1,12 +1,21 @@
 package io.gith.lwjgl3;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import io.gith.Main;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
+
+import static com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration.GLEmulation.GL20;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL32.GL_PROGRAM_POINT_SIZE;
+
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
+        //Gdx.gl.glEnable(GL32.GL_PROGRAM_POINT_SIZE);
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
         createApplication();
     }

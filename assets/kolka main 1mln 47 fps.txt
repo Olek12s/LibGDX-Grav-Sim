@@ -1,0 +1,176 @@
+package io.gith;
+
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector3;
+
+import java.util.Random;
+
+public class Main extends ApplicationAdapter {
+    private OrthographicCamera camera;
+    private SpriteBatch spriteBatch;
+    private BitmapFont font;
+    private Texture circleTexture;
+
+    private final int MAX_PARTICLES = 1_000_000;
+
+    // SoA (Structure of Arrays)
+    private float[] posX, posY;
+    private float[] velX, velY;
+    private float[] radius;
+    private float[] colorR, colorG, colorB;
+
+    private int particleCount = 0;
+    private Random rnd;
+    private int batchSize = 10;
+
+    @Override
+    public void create() {
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        spriteBatch = new SpriteBatch();
+        font = new BitmapFont();
+        font.setColor(Color.WHITE);
+
+        // Inicjalizacja tablic
+        posX = new float[MAX_PARTICLES];
+        posY = new float[MAX_PARTICLES];
+        velX = new float[MAX_PARTICLES];
+        velY = new float[MAX_PARTICLES];
+        radius = new float[MAX_PARTICLES];
+        colorR = new float[MAX_PARTICLES];
+        colorG = new float[MAX_PARTICLES];
+        colorB = new float[MAX_PARTICLES];
+
+        rnd = new Random();
+
+        createCircleTexture();
+
+        addParticles(batchSize);
+    }
+
+    private void createCircleTexture() {
+        int size = 64;
+        Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        pixmap.setBlending(Pixmap.Blending.None);
+        pixmap.setColor(1, 1, 1, 1);
+        pixmap.fillCircle(size / 2, size / 2, size / 2);
+        circleTexture = new Texture(pixmap);
+        pixmap.dispose();
+    }
+
+    private void addParticles(int count) {
+        for (int i = 0; i < count && particleCount < MAX_PARTICLES; i++, particleCount++) {
+            posX[particleCount] = rnd.nextFloat() * Gdx.graphics.getWidth();
+            posY[particleCount] = rnd.nextFloat() * Gdx.graphics.getHeight();
+            velX[particleCount] = (rnd.nextFloat() - 0.5f) * 200f;
+            velY[particleCount] = (rnd.nextFloat() - 0.5f) * 200f;
+            radius[particleCount] = 1f + rnd.nextFloat();
+            colorR[particleCount] = rnd.nextFloat();
+            colorG[particleCount] = rnd.nextFloat();
+            colorB[particleCount] = rnd.nextFloat();
+        }
+    }
+
+    private void addParticlesAt(float x, float y, int count) {
+        for (int i = 0; i < count && particleCount < MAX_PARTICLES; i++, particleCount++) {
+            posX[particleCount] = x;
+            posY[particleCount] = y;
+            velX[particleCount] = (rnd.nextFloat() - 0.5f) * 200f;
+            velY[particleCount] = (rnd.nextFloat() - 0.5f) * 200f;
+            radius[particleCount] = 1f + rnd.nextFloat();
+            colorR[particleCount] = rnd.nextFloat();
+            colorG[particleCount] = rnd.nextFloat();
+            colorB[particleCount] = rnd.nextFloat();
+        }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        camera.setToOrtho(false, width, height);
+    }
+
+    @Override
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        camera.update();
+        spriteBatch.setProjectionMatrix(camera.combined);
+
+        // Dodawanie cząsteczek przy kliknięciu
+        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            addParticlesAt(worldCoords.x, worldCoords.y, batchSize);
+        }
+
+        // Aktualizacja fizyki
+        for (int i = 0; i < particleCount; i++) {
+            posX[i] += velX[i] * delta;
+            posY[i] += velY[i] * delta;
+
+            if (posX[i] < radius[i]) {
+                posX[i] = radius[i];
+                velX[i] = -velX[i];
+            } else if (posX[i] > width - radius[i]) {
+                posX[i] = width - radius[i];
+                velX[i] = -velX[i];
+            }
+
+            if (posY[i] < radius[i]) {
+                posY[i] = radius[i];
+                velY[i] = -velY[i];
+            } else if (posY[i] > height - radius[i]) {
+                posY[i] = height - radius[i];
+                velY[i] = -velY[i];
+            }
+        }
+
+        // Rysowanie
+        spriteBatch.begin();
+        for (int i = 0; i < particleCount; i++) {
+            spriteBatch.setColor(colorR[i], colorG[i], colorB[i], 1f);
+            float size = radius[i] * 2;
+            spriteBatch.draw(circleTexture, posX[i] - radius[i], posY[i] - radius[i], size, size);
+        }
+
+        // Informacje tekstowe
+        spriteBatch.setColor(Color.WHITE);
+        font.draw(spriteBatch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, height - 10);
+        font.draw(spriteBatch, "Particles: " + particleCount, 10, height - 30);
+        font.draw(spriteBatch, "Particles per click: " + batchSize, 10, height - 50);
+        spriteBatch.end();
+
+        // Obsługa klawiatury
+        if (Gdx.input.isKeyJustPressed(Input.Keys.PLUS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.EQUALS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_ADD)) {
+            batchSize = Math.min(batchSize * 2, 1000);
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_SUBTRACT)) {
+            batchSize = Math.max(batchSize / 2, 1);
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.X)) {
+            particleCount = 0; // zamiast clear listy, resetujemy licznik
+        }
+    }
+
+    @Override
+    public void dispose() {
+        spriteBatch.dispose();
+        font.dispose();
+        circleTexture.dispose();
+    }
+}

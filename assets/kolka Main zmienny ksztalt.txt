@@ -1,0 +1,165 @@
+package io.gith;
+
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Main extends ApplicationAdapter {
+    private OrthographicCamera camera;
+    private ShapeRenderer shapeRenderer;
+    private SpriteBatch spriteBatch;
+    private BitmapFont font;
+
+    private class Particle {
+        Vector2 position;
+        Vector2 velocity;
+        float radius;
+        Color color;
+
+        Particle(float x, float y, float vx, float vy, float radius, Color color) {
+            this.position = new Vector2(x, y);
+            this.velocity = new Vector2(vx, vy);
+            this.radius = radius;
+            this.color = color;
+        }
+    }
+
+    private List<Particle> particles;
+    private Random rnd;
+    private int batchSize = 10;
+
+    @Override
+    public void create() {
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        shapeRenderer = new ShapeRenderer();
+        spriteBatch = new SpriteBatch();
+        font = new BitmapFont(); // domyślna czcionka
+        font.setColor(Color.WHITE);
+
+        particles = new ArrayList<>();
+        rnd = new Random();
+
+        // Dodajemy trochę losowych cząsteczek na start
+        addParticles(batchSize);
+    }
+
+    private void addParticles(int count) {
+        for (int i = 0; i < count; i++) {
+            float x = rnd.nextFloat() * Gdx.graphics.getWidth();
+            float y = rnd.nextFloat() * Gdx.graphics.getHeight();
+            float vx = (rnd.nextFloat() - 0.5f) * 200f; // prędkość od -100 do 100 px/s
+            float vy = (rnd.nextFloat() - 0.5f) * 200f;
+            float radius = 1f + rnd.nextFloat() * 9f;   // promień 1-10 px
+            Color color = new Color(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f);
+            particles.add(new Particle(x, y, vx, vy, radius, color));
+        }
+    }
+
+    // Dodawanie cząsteczek w konkretnym miejscu (na klik)
+    private void addParticlesAt(float x, float y, int count) {
+        for (int i = 0; i < count; i++) {
+            float vx = (rnd.nextFloat() - 0.5f) * 200f;
+            float vy = (rnd.nextFloat() - 0.5f) * 200f;
+            float radius = 1f + rnd.nextFloat() * 9f;
+            Color color = new Color(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f);
+            particles.add(new Particle(x, y, vx, vy, radius, color));
+        }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        camera.setToOrtho(false, width, height);
+    }
+
+    @Override
+    public void render() {
+        float delta = Gdx.graphics.getDeltaTime();
+
+        // Czyszczenie ekranu
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        camera.update();
+        shapeRenderer.setProjectionMatrix(camera.combined);
+
+        // Dodawanie cząsteczek myszką LPM
+        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            Vector3 worldCoords = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            addParticlesAt(worldCoords.x, worldCoords.y, batchSize);
+        }
+
+        // Aktualizacja pozycji i rysowanie cząsteczek
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (Particle p : particles) {
+            // Aktualizacja pozycji
+            p.position.x += p.velocity.x * delta;
+            p.position.y += p.velocity.y * delta;
+
+            // Odbicie od krawędzi ekranu
+            if (p.position.x < p.radius) {
+                p.position.x = p.radius;
+                p.velocity.x = -p.velocity.x;
+            } else if (p.position.x > Gdx.graphics.getWidth() - p.radius) {
+                p.position.x = Gdx.graphics.getWidth() - p.radius;
+                p.velocity.x = -p.velocity.x;
+            }
+            if (p.position.y < p.radius) {
+                p.position.y = p.radius;
+                p.velocity.y = -p.velocity.y;
+            } else if (p.position.y > Gdx.graphics.getHeight() - p.radius) {
+                p.position.y = Gdx.graphics.getHeight() - p.radius;
+                p.velocity.y = -p.velocity.y;
+            }
+
+            // Rysowanie
+            shapeRenderer.setColor(p.color);
+            shapeRenderer.circle(p.position.x, p.position.y, p.radius);
+        }
+        shapeRenderer.end();
+
+        // Obsługa klawiszy zmiany batchSize
+        if (Gdx.input.isKeyJustPressed(Input.Keys.PLUS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.EQUALS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_ADD)) {
+            batchSize = Math.min(batchSize * 2, 1000);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_SUBTRACT)) {
+            batchSize = Math.max(batchSize / 2, 1);
+        }
+
+        // Usuwanie wszystkich cząsteczek
+        if (Gdx.input.isKeyJustPressed(Input.Keys.X)) {
+            particles.clear();
+        }
+
+        // Rysowanie tekstu z FPS i licznikami
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        font.draw(spriteBatch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, Gdx.graphics.getHeight() - 10);
+        font.draw(spriteBatch, "Particles: " + particles.size(), 10, Gdx.graphics.getHeight() - 30);
+        font.draw(spriteBatch, "Particles per click: " + batchSize, 10, Gdx.graphics.getHeight() - 50);
+        spriteBatch.end();
+    }
+
+    @Override
+    public void dispose() {
+        shapeRenderer.dispose();
+        spriteBatch.dispose();
+        font.dispose();
+    }
+}
