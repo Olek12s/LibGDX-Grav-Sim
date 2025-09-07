@@ -23,6 +23,12 @@ public class CameraController implements Updatable
 
     @Override
     public void update(float delta) {
+        cameraZoom();
+        cameraDrag();
+        camera.update();
+    }
+
+    private void cameraZoom() {
         InputController input = Main.getInstance().getInputController();
         float scrollY = input.getScrollY();
         if (scrollY != 0) {
@@ -33,6 +39,14 @@ public class CameraController implements Updatable
 
             input.resetScroll();
         }
-        camera.update();
+    }
+    private void cameraDrag() {
+        InputController input = Main.getInstance().getInputController();
+        if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
+            camera.position.x -= input.getDeltaX() * camera.zoom*8;
+            camera.position.y += input.getDeltaY() * camera.zoom*8;
+
+            input.resetDrag();
+        }
     }
 }
