@@ -9,11 +9,14 @@ public class CircleParticle implements Renderable, Updatable
 {
     private Vector2 position;
     private Vector2 velocity;
+    private float mass;
     private Color color;
     private static Texture texture;
 
     public Vector2 getPosition() {return position;}
     public Vector2 getVelocity() {return velocity;}
+    public float getMass() {return mass;}
+
     public Color getColor() {return color;}
     public static Texture getTexture() {return texture;}
 
@@ -26,9 +29,10 @@ public class CircleParticle implements Renderable, Updatable
         pixmap.dispose();
     }
 
-    public CircleParticle(Vector2 position, Vector2 velocity, Color color) {
+    public CircleParticle(Vector2 position, Vector2 velocity, float Mass, Color color) {
         this.position = position;
         this.velocity = velocity;
+        this.mass = mass;
         this.color = color;
     }
 

@@ -35,6 +35,8 @@ public class Main extends ApplicationAdapter {
     public static int getMaxFps() {return MAX_FPS;}
     public static Main getInstance() {return instance;}
     public InputController getInputController() {return inputController;}
+    public ParticleManager getParticleManager() {return particleManager;}
+    public CameraController getCameraController() {return cameraController;}
 
     public void create() {
         instance = this;

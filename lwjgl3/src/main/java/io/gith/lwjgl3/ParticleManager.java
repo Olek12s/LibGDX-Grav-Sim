@@ -25,6 +25,7 @@ public class ParticleManager implements Renderable, Updatable {
                 random.nextInt(600)),
                 new Vector2(random.nextFloat(20f) - 10f,
                     random.nextFloat(20f) - 10f),
+                0,
                 Color.CYAN);
 
             particles.add(p);
