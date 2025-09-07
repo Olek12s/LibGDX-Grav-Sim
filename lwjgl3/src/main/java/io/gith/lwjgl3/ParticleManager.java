@@ -12,7 +12,7 @@ public class ParticleManager implements Renderable, Updatable {
     public ParticleManager() {
         this.particles = new ArrayList<>();
 
-        CircleParticle particle = new CircleParticle(new Vector2(400, 300), new Vector2(0, 0), Color.CYAN);
+        CircleParticle particle = new CircleParticle(new Vector2(400, 300), new Vector2((float) 5f, 0), Color.CYAN);
         particles.add(particle);
     }
 

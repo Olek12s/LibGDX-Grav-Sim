@@ -13,14 +13,12 @@ public class CircleParticle implements Renderable, Updatable
     private static Texture texture;
 
     static {
-        int size = 64;
-        Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setBlending(Pixmap.Blending.None);
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1, 1, 1, 1);
-        pixmap.fillCircle(size / 2, size / 2, size / 2);
+        pixmap.drawPixel(0, 0);
         texture = new Texture(pixmap);
+        texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pixmap.dispose();
-        System.out.println("a");
     }
 
     public CircleParticle(Vector2 position, Vector2 velocity, Color color) {
@@ -29,20 +27,18 @@ public class CircleParticle implements Renderable, Updatable
         this.color = color;
     }
 
-    private void createTexture() {
-
-    }
-
     @Override
     public void render() {
         Resources.batch.setColor(color);
-        float size = 64;
-        Resources.batch.draw(texture, position.x - size/2, position.y - size/2, size, size);
+        float size = 1;
+        Resources.batch.draw(texture, position.x - size/2, position.y - size/2, 1, 1);
         Resources.batch.setColor(Color.WHITE);
     }
 
     @Override
     public void update(float delta) {
-
+        //position.add(new Vector2(velocity).scl(delta)); // not optimal
+        position.x += velocity.x * delta;
+        position.y += velocity.y * delta;
     }
 }

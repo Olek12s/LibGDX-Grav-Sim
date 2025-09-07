@@ -3,18 +3,23 @@ package io.gith.lwjgl3;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 
 public class Main extends ApplicationAdapter {
 
+    private Viewport viewport;
+    private OrthographicCamera camera;
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
     private int MAX_UPS = 60;   // logic updates per second
-    private int MAX_FPS = 20;   // rendering frames per second
+    private int MAX_FPS = 60;   // rendering frames per second
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -26,6 +31,10 @@ public class Main extends ApplicationAdapter {
         updatables = new ArrayList<>();
         particleManager = new ParticleManager();
         Resources.batch = new SpriteBatch();
+
+        camera = new OrthographicCamera();
+        viewport = new ScreenViewport(camera);
+        viewport.apply();
 
         renderables.add(particleManager);
         updatables.add(particleManager);
@@ -63,6 +72,9 @@ public class Main extends ApplicationAdapter {
 
     private void draw() {
         ScreenUtils.clear(Color.BLACK);
+        camera.update();
+        Resources.batch.setProjectionMatrix(camera.combined);
+
         Resources.batch.begin();
         for (Renderable r : renderables) {
             r.render();
@@ -71,7 +83,7 @@ public class Main extends ApplicationAdapter {
     }
 
     public void resize (int width, int height) {
-
+        viewport.update(width, height, true);
     }
 
     public void pause () {
