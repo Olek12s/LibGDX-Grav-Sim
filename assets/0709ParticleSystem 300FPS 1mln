@@ -1,0 +1,94 @@
+package io.gith.lwjgl3;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.MathUtils;
+
+public class ParticleSystem implements Renderable, Updatable {
+
+    private final int count;
+    private final float[] vertices; // x, y, r, g, b, a
+    private final Mesh mesh;
+    private final ShaderProgram shader;
+
+    private final float[] velX;
+    private final float[] velY;
+
+    public ParticleSystem(int count) {
+        this.count = count;
+
+        vertices = new float[count * 6];
+        velX = new float[count];
+        velY = new float[count];
+
+        // vertex attributes: 2D pos + 4D color
+        mesh = new Mesh(true, count, 0,
+            new VertexAttribute(VertexAttributes.Usage.Position, 2, "a_position"),
+            new VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, "a_color"));
+
+        // prosty shader na punkty
+        String vertexShader =
+            "attribute vec2 a_position;\n" +
+                "attribute vec4 a_color;\n" +
+                "uniform mat4 u_projTrans;\n" +
+                "varying vec4 v_color;\n" +
+                "void main() {\n" +
+                "    v_color = a_color;\n" +
+                "    gl_Position = u_projTrans * vec4(a_position, 0.0, 1.0);\n" +
+                "    gl_PointSize = 1.0;\n" +   // 1 piksel!
+                "}";
+        String fragmentShader =
+            "#ifdef GL_ES\n" +
+                "precision mediump float;\n" +
+                "#endif\n" +
+                "varying vec4 v_color;\n" +
+                "void main() {\n" +
+                "    gl_FragColor = v_color;\n" +
+                "}";
+
+        shader = new ShaderProgram(vertexShader, fragmentShader);
+        if (!shader.isCompiled()) {
+            throw new RuntimeException("Shader error: " + shader.getLog());
+        }
+
+        // inicjalizacja losowych cząstek
+        for (int i = 0; i < count; i++) {
+            float x = MathUtils.random(0, Gdx.graphics.getWidth());
+            float y = MathUtils.random(0, Gdx.graphics.getHeight());
+            float r = MathUtils.random();
+            float g = MathUtils.random();
+            float b = MathUtils.random();
+
+            int idx = i * 6;
+            vertices[idx]     = x;
+            vertices[idx + 1] = y;
+            vertices[idx + 2] = r;
+            vertices[idx + 3] = g;
+            vertices[idx + 4] = b;
+            vertices[idx + 5] = 1f; // alpha
+
+            velX[i] = MathUtils.random(-50f, 50f);
+            velY[i] = MathUtils.random(-50f, 50f);
+        }
+
+        mesh.setVertices(vertices);
+    }
+
+    @Override
+    public void render() {
+        shader.bind();
+        shader.setUniformMatrix("u_projTrans", Resources.camera.combined);
+        mesh.render(shader, GL20.GL_POINTS);
+    }
+
+    @Override
+    public void update(float delta) {
+        for (int i = 0; i < count; i++) {
+            int idx = i * 6;
+            vertices[idx]     += velX[i] * delta;
+            vertices[idx + 1] += velY[i] * delta;
+        }
+        mesh.setVertices(vertices);
+    }
+}

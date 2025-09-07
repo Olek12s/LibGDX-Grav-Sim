@@ -12,6 +12,11 @@ public class CircleParticle implements Renderable, Updatable
     private Color color;
     private static Texture texture;
 
+    public Vector2 getPosition() {return position;}
+    public Vector2 getVelocity() {return velocity;}
+    public Color getColor() {return color;}
+    public static Texture getTexture() {return texture;}
+
     static {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1, 1, 1, 1);
@@ -30,9 +35,8 @@ public class CircleParticle implements Renderable, Updatable
     @Override
     public void render() {
         Resources.batch.setColor(color);
-        float size = 1;
-        Resources.batch.draw(texture, position.x - size/2, position.y - size/2, 1, 1);
-        Resources.batch.setColor(Color.WHITE);
+        Resources.batch.draw(texture, position.x - 1/2, position.y - 1/2, 1, 1);
+        //Resources.batch.setColor(Color.WHITE);
     }
 
     @Override

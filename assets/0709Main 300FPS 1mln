@@ -13,8 +13,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import java.util.ArrayList;
 
 public class Main extends ApplicationAdapter {
-    private static Main instance;
 
+    private Viewport viewport;
+    private OrthographicCamera camera;
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
     private static int MAX_UPS = 30;   // logic updates per second
@@ -28,32 +29,30 @@ public class Main extends ApplicationAdapter {
     private float fpsUpsTimer = 0f;
 
     private ParticleManager particleManager;
-    private CameraController cameraController;
-    private InputController inputController;
 
     public static int getMaxUps() {return MAX_UPS;}
     public static int getMaxFps() {return MAX_FPS;}
-    public static Main getInstance() {return instance;}
-    public InputController getInputController() {return inputController;}
 
     public void create() {
-        instance = this;
-
         renderables = new ArrayList<>();
         updatables = new ArrayList<>();
-        particleManager = new ParticleManager();
-        cameraController = new CameraController();
-        inputController = new InputController();
 
-        Resources.batch = new SpriteBatch();
-        Gdx.input.setInputProcessor(inputController);
+        Resources.camera = new OrthographicCamera();
+        viewport = new ScreenViewport(Resources.camera);
+        viewport.apply();
 
-        renderables.add(particleManager);
-        updatables.add(particleManager);
-        updatables.add(cameraController);
+        Resources.batch = new SpriteBatch();  // <--- brakowało tego!
+
+        // zamiast ParticleManager
+        ParticleSystem system = new ParticleSystem(1_000_000);
+
+        renderables.add(system);
+        updatables.add(system);
 
         logicInterval = 1f / MAX_UPS;
     }
+
+
 
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
@@ -95,8 +94,9 @@ public class Main extends ApplicationAdapter {
 
     private void draw() {
         ScreenUtils.clear(Color.BLACK);
-        cameraController.getCamera().update();
-        Resources.batch.setProjectionMatrix(cameraController.getCamera().combined);
+
+        Resources.camera.update();   // teraz globalna kamera
+        Resources.batch.setProjectionMatrix(Resources.camera.combined);
 
         Resources.batch.begin();
         for (Renderable r : renderables) {
@@ -105,8 +105,9 @@ public class Main extends ApplicationAdapter {
         Resources.batch.end();
     }
 
+
     public void resize (int width, int height) {
-        cameraController.getViewport().update(width, height, true);
+        viewport.update(width, height, true);
     }
 
     public void pause () {
