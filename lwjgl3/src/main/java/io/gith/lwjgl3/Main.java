@@ -2,6 +2,10 @@ package io.gith.lwjgl3;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
 
@@ -15,14 +19,21 @@ public class Main extends ApplicationAdapter {
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
 
-    public void create () {
+    private ParticleManager particleManager;
+
+    public void create() {
         renderables = new ArrayList<>();
         updatables = new ArrayList<>();
+        particleManager = new ParticleManager();
+        Resources.batch = new SpriteBatch();
+
+        renderables.add(particleManager);
+        updatables.add(particleManager);
 
         logicInterval = 1f / MAX_UPS;
     }
 
-    public void render () {
+    public void render() {
         float delta = Gdx.graphics.getDeltaTime();
         accumulator += delta;
 
@@ -31,7 +42,6 @@ public class Main extends ApplicationAdapter {
                 u.update(logicInterval);
             }
             accumulator -= logicInterval;
-            System.out.println("LOGIC");
         }
 
         if (MAX_FPS > 0) {
@@ -42,15 +52,22 @@ public class Main extends ApplicationAdapter {
                 if (frameDuration < minFrameTime) {
                     try {
                         Thread.sleep((minFrameTime - frameDuration) / 1_000_000L);
-                    } catch (InterruptedException ignored) {}
+                    } catch (InterruptedException ignored) {
+                    }
                 }
             }
             lastRenderTime = System.nanoTime();
         }
+        draw();
+    }
+
+    private void draw() {
+        ScreenUtils.clear(Color.BLACK);
+        Resources.batch.begin();
         for (Renderable r : renderables) {
             r.render();
         }
-        System.out.println("RENDER");
+        Resources.batch.end();
     }
 
     public void resize (int width, int height) {
