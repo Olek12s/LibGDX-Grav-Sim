@@ -17,8 +17,8 @@ public class Main extends ApplicationAdapter {
 
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
-    private static int MAX_UPS = 30;   // logic updates per second
-    private static int MAX_FPS = 600;   // rendering frames per second
+    private static int MAX_UPS = 20;   // logic updates per second
+    private static int MAX_FPS = 60;   // rendering frames per second
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS

@@ -2,6 +2,7 @@ package io.gith.lwjgl3;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
+import io.gith.lwjgl3.utility.QuadTree;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -12,7 +13,6 @@ public class ParticleManager implements Renderable, Updatable {
 
     public ParticleManager() {
         this.particles = new ArrayList<>();
-
         //CircleParticle particle = new CircleParticle(new Vector2(400, 300), new Vector2((float) 5f, 0), Color.CYAN);
         //particles.add(particle);
 
