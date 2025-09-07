@@ -1,19 +1,18 @@
 package io.gith.lwjgl3;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import io.gith.Main;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL32;
-
-import static com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration.GLEmulation.GL20;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL32.GL_PROGRAM_POINT_SIZE;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
+import imgui.ImGuiIO;
+import imgui.gl3.ImGuiImplGl3;
+import imgui.glfw.ImGuiImplGlfw;
+import imgui.internal.ImGui;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
+
     public static void main(String[] args) {
         //Gdx.gl.glEnable(GL32.GL_PROGRAM_POINT_SIZE);
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
@@ -37,7 +36,7 @@ public class Lwjgl3Launcher {
         //// useful for testing performance, but can also be very stressful to some hardware.
         //// You may also need to configure GPU drivers to fully disable Vsync; this can cause screen tearing.
 
-        configuration.setWindowedMode(640, 480);
+        configuration.setWindowedMode(800, 500);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
