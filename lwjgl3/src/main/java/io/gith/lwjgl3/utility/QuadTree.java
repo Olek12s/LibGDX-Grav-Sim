@@ -4,12 +4,24 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import io.gith.lwjgl3.CircleParticle;
+import io.gith.lwjgl3.Renderable;
+import io.gith.lwjgl3.Updatable;
 
 import java.util.ArrayList;
 
-public class QuadTree {
+public class QuadTree implements Renderable, Updatable {
 
     private Node root;
+
+    @Override
+    public void render() {
+
+    }
+
+    @Override
+    public void update(float delta) {
+
+    }
 
     private static class Node {
         private Node[] children;
