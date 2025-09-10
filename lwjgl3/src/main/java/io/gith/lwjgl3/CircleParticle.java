@@ -20,7 +20,6 @@ public class CircleParticle implements Renderable, Updatable
     public Color getColor() {return color;}
     public static Texture getTexture() {return texture;}
 
-    /* pixel
     static {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1, 1, 1, 1);
@@ -29,24 +28,6 @@ public class CircleParticle implements Renderable, Updatable
         texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pixmap.dispose();
     }
-    */
-
-    // circle
-    static {
-        int radius = 16;
-        int size = radius * 2;
-
-        Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setBlending(Pixmap.Blending.None);
-
-        pixmap.setColor(1, 1, 1, 1);
-        pixmap.fillCircle(radius, radius, radius);
-
-        texture = new Texture(pixmap);
-        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-        pixmap.dispose();
-    }
-
 
     public CircleParticle(Vector2 position, Vector2 velocity, float Mass, Color color) {
         this.position = position;
@@ -57,8 +38,10 @@ public class CircleParticle implements Renderable, Updatable
 
     @Override
     public void render() {
+        float zoom = Main.getInstance().getCameraController().getCamera().zoom;
+
         Resources.batch.setColor(color);
-        Resources.batch.draw(texture, position.x - 1/2, position.y - 1/2, 1, 1);
+        Resources.batch.draw(texture, position.x - zoom/2f, position.y - zoom/2f, zoom, zoom);
         //Resources.batch.setColor(Color.WHITE);
     }
 

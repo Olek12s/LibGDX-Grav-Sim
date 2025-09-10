@@ -23,9 +23,9 @@ public class CameraController implements Updatable
 
     @Override
     public void update(float delta) {
+      //  camera.update();
         cameraZoom();
         cameraDrag();
-        camera.update();
     }
 
     private void cameraZoom() {
