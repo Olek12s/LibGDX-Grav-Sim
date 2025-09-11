@@ -1,6 +1,7 @@
 package io.gith.lwjgl3;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class Resources
 {

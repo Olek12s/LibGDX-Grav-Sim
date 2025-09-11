@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -96,6 +98,7 @@ public class Main extends ApplicationAdapter {
     }
 
     private void draw() {
+        Quad quad = new Quad(new Vector2(50, 50), 20);
         ScreenUtils.clear(Color.BLACK);
         cameraController.getCamera().update();
         Resources.batch.setProjectionMatrix(cameraController.getCamera().combined);
@@ -104,6 +107,7 @@ public class Main extends ApplicationAdapter {
         for (Renderable r : renderables) {
             r.render();
         }
+        quad.render();
         Resources.batch.end();
     }
 
