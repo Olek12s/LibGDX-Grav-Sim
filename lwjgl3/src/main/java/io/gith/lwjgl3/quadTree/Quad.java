@@ -17,20 +17,8 @@ public class Quad implements Renderable
     public Vector2 getCenter() {return center;}
     public void setCenter(Vector2 center) {this.center = center;}
 
-
-    public Color getColor() {
-        int index = Math.max(0, Math.min(colors.length - 1, (int)(Math.log(size) / Math.log(2))));
-        return colors[index];
-    }
-
-
     public int getSize() {return size;}
-    public void setSize(int size) {this.size = size;}
     public static Texture getTexture() {return texture;}
-
-    public static void setTexture(Texture texture) {
-        Quad.texture = texture;
-    }
 
     static {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -99,10 +87,11 @@ public class Quad implements Renderable
      * <p>
      * The Quad is divided into four quadrants relative to its center:
      * <ul>
-     *     <li>0 = left-bottom</li>
-     *     <li>1 = right-bottom</li>
-     *     <li>2 = left-top</li>
-     *     <li>3 = right-top</li>
+     *     <li>-1 = out of bounds</li>
+     *     <li>0 = left-top</li>
+     *     <li>1 = right-top/li>
+     *     <li>2 = left-bottom</li>
+     *     <li>3 = right-bottom</li>
      * </ul>
      *
      * @param pos the position to check
@@ -110,9 +99,22 @@ public class Quad implements Renderable
      *         0 = left-bottom, 1 = right-bottom, 2 = left-top, 3 = right-top
      */
     public int findQuadrant(Vector2 pos) {
-        int xBit = (pos.x > center.x) ? 1 : 0;
-        int yBit = (pos.y > center.y) ? 2 : 0;
-        return xBit | yBit;
+        float half = size / 2f;
+        if (pos.x < center.x - half || pos.x > center.x + half ||
+        pos.y < center.y - half || pos.y > center.y + half) {
+            return -1;
+        }
+        else
+        {
+            boolean right = pos.x > center.x;
+            boolean top = pos.y > center.y;
+
+
+            if (!right && top)  return 0;   // left-top
+            if (right && top) return 1;      // right-top
+            if (!right && !top) return 2;   // left-bottom
+            else  return 3;                 // right-bottom
+        }
     }
 
     @Override

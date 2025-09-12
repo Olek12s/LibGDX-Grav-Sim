@@ -105,7 +105,43 @@ public class Main extends ApplicationAdapter {
             r.render();
         }
 
+        Quad quad = new Quad(new Vector2(0,0), 32);
+        quad.render();
 
+
+        int offset = 10;
+
+
+        // 0
+        int LT = quad.findQuadrant(new Vector2(-offset,offset));
+        Resources.batch.setColor(new Color(Color.NAVY));
+        Resources.batch.draw(Quad.getTexture(), -offset, offset, 1, 1);
+        System.out.println("0 LT: " + LT);
+
+        // 1
+        int RT = quad.findQuadrant(new Vector2(offset, offset));
+        Resources.batch.setColor(new Color(Color.OLIVE));
+        Resources.batch.draw(Quad.getTexture(), offset, offset, 1, 1);
+        System.out.println("1 RT: " + RT);
+
+        // 2
+        int LB = quad.findQuadrant(new Vector2(-offset,-offset));
+        Resources.batch.setColor(new Color(Color.BLUE));
+        Resources.batch.draw(Quad.getTexture(), -offset, -offset, 1, 1);
+        System.out.println("2 LB: " + LB);
+
+        // 3
+        int RB = quad.findQuadrant(new Vector2(offset,-offset));
+        Resources.batch.setColor(new Color(Color.GREEN));
+        Resources.batch.draw(Quad.getTexture(), offset, -offset, 1, 1);
+        System.out.println("3 RB: " + RB);
+
+
+
+        int RR = quad.findQuadrant(new Vector2(17,0));
+        Resources.batch.setColor(new Color(Color.ROYAL));
+        Resources.batch.draw(Quad.getTexture(), 17, 1, 1, 1);
+         System.out.println("RR: " + RR);
 
 
         Resources.batch.end();
