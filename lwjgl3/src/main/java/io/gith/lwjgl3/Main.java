@@ -3,14 +3,12 @@ package io.gith.lwjgl3;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import io.gith.lwjgl3.quadTree.Body;
+import io.gith.lwjgl3.quadTree.Quad;
 
 import java.util.ArrayList;
 
@@ -29,31 +27,31 @@ public class Main extends ApplicationAdapter {
     private int updates = 0;
     private float fpsUpsTimer = 0f;
 
-    private ParticleManager particleManager;
     private CameraController cameraController;
     private InputController inputController;
+    private ArrayList<Body> particles;
 
     public static int getMaxUps() {return MAX_UPS;}
     public static int getMaxFps() {return MAX_FPS;}
     public static Main getInstance() {return instance;}
     public InputController getInputController() {return inputController;}
-    public ParticleManager getParticleManager() {return particleManager;}
     public CameraController getCameraController() {return cameraController;}
+    public ArrayList<Body> getParticles() {
+        return particles;
+    }
 
     public void create() {
         instance = this;
-
+        particles = new ArrayList<>();
         renderables = new ArrayList<>();
         updatables = new ArrayList<>();
-        particleManager = new ParticleManager();
         cameraController = new CameraController();
         inputController = new InputController();
 
         Resources.batch = new SpriteBatch();
         Gdx.input.setInputProcessor(inputController);
 
-        renderables.add(particleManager);
-        updatables.add(particleManager);
+
         updatables.add(cameraController);
 
         logicInterval = 1f / MAX_UPS;
@@ -98,7 +96,6 @@ public class Main extends ApplicationAdapter {
     }
 
     private void draw() {
-        Quad quad = new Quad(new Vector2(50, 50), 20);
         ScreenUtils.clear(Color.BLACK);
         cameraController.getCamera().update();
         Resources.batch.setProjectionMatrix(cameraController.getCamera().combined);
@@ -107,7 +104,10 @@ public class Main extends ApplicationAdapter {
         for (Renderable r : renderables) {
             r.render();
         }
-        quad.render();
+
+
+
+
         Resources.batch.end();
     }
 

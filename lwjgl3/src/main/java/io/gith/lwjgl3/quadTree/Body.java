@@ -1,9 +1,13 @@
-package io.gith.lwjgl3;
+package io.gith.lwjgl3.quadTree;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
+import io.gith.lwjgl3.Main;
+import io.gith.lwjgl3.Renderable;
+import io.gith.lwjgl3.Resources;
+import io.gith.lwjgl3.Updatable;
 
 public class Body implements Renderable, Updatable
 {
@@ -30,7 +34,7 @@ public class Body implements Renderable, Updatable
         pixmap.dispose();
     }
 
-    public Body(Vector2 position, Vector2 velocity, float Mass, Color color) {
+    public Body(Vector2 position, Vector2 velocity, float mass, Color color) {
         this.position = position;
         this.velocity = velocity;
         this.mass = mass;
@@ -48,7 +52,8 @@ public class Body implements Renderable, Updatable
 
     @Override
     public void update(float delta) {
-        //position.add(new Vector2(velocity).scl(delta)); // not optimal
+        velocity.x += acceleration.x * delta;
+        velocity.y += acceleration.y * delta;
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
     }
