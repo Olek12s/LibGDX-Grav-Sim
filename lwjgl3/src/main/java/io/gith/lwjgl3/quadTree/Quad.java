@@ -74,10 +74,10 @@ public class Quad implements Renderable
     public Quad[] toQuadrants() {
         float half = size / 2f;
         return new Quad[] {
+            new Quad(new Vector2(center.x - half/2, center.y + half/2), (int) half), // left-top
+            new Quad(new Vector2(center.x + half/2, center.y + half/2), (int) half),  // right-top
             new Quad(new Vector2(center.x - half/2, center.y - half/2), (int) half), // left-bottom
             new Quad(new Vector2(center.x + half/2, center.y - half/2), (int) half), // right-bottom
-            new Quad(new Vector2(center.x - half/2, center.y + half/2), (int) half), // left-top
-            new Quad(new Vector2(center.x + half/2, center.y + half/2), (int) half)  // right-top
         };
     }
 
