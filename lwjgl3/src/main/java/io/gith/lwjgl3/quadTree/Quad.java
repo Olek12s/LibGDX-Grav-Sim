@@ -35,6 +35,14 @@ public class Quad implements Renderable
             float b = 0f;
             float alpha = 0.2f + t * 0.7f;
             colors[i] = new Color(r, g, b, alpha / 3);
+            /*
+            colors[0] = new Color(Color.BLUE);
+            colors[1] = new Color(Color.LIME);
+            colors[2] = new Color(Color.GREEN);
+            colors[3] = new Color(Color.PINK);
+            colors[4] = new Color(Color.BROWN);
+
+             */
         }
         for (int i = 8; i <= 15; i++) {
             float t = (i - 8) / 7f;

@@ -22,7 +22,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
     private static int MAX_UPS = 30;   // logic updates per second
-    private static int MAX_FPS = 30;   // rendering frames per second
+    private static int MAX_FPS = 10;   // rendering frames per second
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -62,7 +62,7 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 0;
+        int n = 500000;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
@@ -76,6 +76,7 @@ public class Main extends ApplicationAdapter {
             renderables.add(body);
         }
 
+        /*
         for (int i = 0; i < 5; i++) {
             Body b1 = (new Body(new Vector2(0,0), new Vector2(0,0),1,Color.WHITE));
             Body b2 = (new Body(new Vector2(2f,0), new Vector2(0,0),1,Color.WHITE));
@@ -83,6 +84,7 @@ public class Main extends ApplicationAdapter {
             updatables.add(b1);
             renderables.add(b1);
         }
+        */
     }
 
     public void render() {
@@ -129,36 +131,28 @@ public class Main extends ApplicationAdapter {
         Resources.batch.setProjectionMatrix(cameraController.getCamera().combined);
 
         Resources.batch.begin();
+
+
+
         for (Renderable r : renderables) {
-            r.render();
+            //   r.render();
         }
 
-        ArrayList<Quad> quadsVec = new ArrayList<>();
-        Quad quad = new Quad(new Vector2(0,0), 64);
-        quadsVec.add(quad);
 
-        Quad[] quadsArr0 = quadsVec.get(0).toQuadrants();   // new: 1 2 3 4
-        Collections.addAll(quadsVec, quadsArr0);
-
-        Quad[] quadsArr1 = quadsVec.get(2).toQuadrants();   // new: 5 6 7 8
-        Collections.addAll(quadsVec, quadsArr1);
-
-        Quad[] quadsArr2 = quadsVec.get(6).toQuadrants();   // new: 9 10 11 12
-        Collections.addAll(quadsVec, quadsArr2);
-
-
-
+        quadTree.erase();
+        long start = System.nanoTime();
+        for (Body b : particles) {
+            quadTree.insertBody(0, b.getPosition(), b.getMass());
+        }
+        long end = System.nanoTime();
+        long durationUs = (end - start) / 1_000;
+        long durationMs = (end - start) / 1_000_000;
+        System.out.println(durationUs + " us");
+        System.out.println(durationMs + " ms");
 
         for (Body b : particles) {
             b.render();
         }
-
-        quadTree.erase();
-        for (Body b : particles) {
-            quadTree.insertBody(0, b.getPosition(), b.getMass());
-        }
-        System.out.println("\n\n\n");
-
         quadTree.renderVisualization();
 
 
