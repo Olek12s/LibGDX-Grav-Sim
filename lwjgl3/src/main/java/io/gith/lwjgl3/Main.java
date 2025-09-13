@@ -22,7 +22,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
     private static int MAX_UPS = 30;   // logic updates per second
-    private static int MAX_FPS = 10;   // rendering frames per second
+    private static int MAX_FPS = 30;   // rendering frames per second
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -62,14 +62,17 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 500000;
+        int n = 100000;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
-                new Vector2(r.nextInt(500), r.nextInt(500)),
-                new Vector2(r.nextFloat() * 100f - 50f, r.nextFloat() * 100f - 50f),
-                r.nextInt(50),
-                new Color(Color.WHITE)));
+                new Vector2(r.nextInt(50), r.nextInt(50)),
+                new Vector2(r.nextFloat() * 10f - 5f, r.nextFloat() * 10f - 5f),
+                r.nextInt(Math.max(1, 50)),
+                //new Vector2(r.nextInt(12), r.nextInt(12)),
+                //new Vector2(0,0),
+                //r.nextInt(50),
+                new Color(0.7f,0.7f,0.7f,0.7f)));
 
             particles.add(body);
             updatables.add(body);
@@ -135,25 +138,25 @@ public class Main extends ApplicationAdapter {
 
 
         for (Renderable r : renderables) {
-            //   r.render();
+                r.render();
         }
 
 
         quadTree.erase();
         long start = System.nanoTime();
         for (Body b : particles) {
-            quadTree.insertBody(0, b.getPosition(), b.getMass());
+            //quadTree.insertBody(0, b.getPosition(), b.getMass());
+            quadTree.insertBody(0, b);
         }
         long end = System.nanoTime();
         long durationUs = (end - start) / 1_000;
         long durationMs = (end - start) / 1_000_000;
         System.out.println(durationUs + " us");
         System.out.println(durationMs + " ms");
+        System.out.println("Nodes: " + quadTree.getNodes().size());
 
-        for (Body b : particles) {
-            b.render();
-        }
         quadTree.renderVisualization();
+        //quadTree.renderRootVisualization();
 
 
 

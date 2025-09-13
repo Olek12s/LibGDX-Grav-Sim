@@ -13,6 +13,7 @@ public class Quad implements Renderable
     private int size;
     private static Texture texture;
     private static Color[] colors;
+    public static int MIN_QUAD_SIZE = 1;
 
     public int getSize() {return size;}
     public static Texture getTexture() {return texture;}
@@ -34,15 +35,16 @@ public class Quad implements Renderable
             float g = 0f;
             float b = 0f;
             float alpha = 0.2f + t * 0.7f;
-            colors[i] = new Color(r, g, b, alpha / 3);
+            colors[i] = new Color(r, g, b, alpha / 2);
+
             /*
             colors[0] = new Color(Color.BLUE);
             colors[1] = new Color(Color.LIME);
             colors[2] = new Color(Color.GREEN);
             colors[3] = new Color(Color.PINK);
             colors[4] = new Color(Color.BROWN);
+            */
 
-             */
         }
         for (int i = 8; i <= 15; i++) {
             float t = (i - 8) / 7f;
@@ -51,7 +53,7 @@ public class Quad implements Renderable
             float g = 0.5f + t * 0.5f;
             float b = 0f;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha / 3);
+            colors[i] = new Color(r, g, b, alpha / 2);
         }
         for (int i = 16; i <= 23; i++) {
             float t = (i - 16) / 7f;
@@ -60,7 +62,7 @@ public class Quad implements Renderable
             float g = 1f;
             float b = 0f;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha / 3);
+            colors[i] = new Color(r, g, b, alpha / 2);
         }
         for (int i = 24; i <= 31; i++) {
             float t = (i - 24) / 7f;
@@ -68,7 +70,7 @@ public class Quad implements Renderable
             float g = 1f;
             float b = t;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha / 3);
+            colors[i] = new Color(r, g, b, alpha / 2);
         }
     }
 
