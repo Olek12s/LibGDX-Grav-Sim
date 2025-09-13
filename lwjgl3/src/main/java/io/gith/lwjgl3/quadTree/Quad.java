@@ -14,11 +14,9 @@ public class Quad implements Renderable
     private static Texture texture;
     private static Color[] colors;
 
-    public Vector2 getCenter() {return center;}
-    public void setCenter(Vector2 center) {this.center = center;}
-
     public int getSize() {return size;}
     public static Texture getTexture() {return texture;}
+    public Vector2 getCenter() {return center;}
 
     static {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -36,7 +34,7 @@ public class Quad implements Renderable
             float g = 0f;
             float b = 0f;
             float alpha = 0.2f + t * 0.7f;
-            colors[i] = new Color(r, g, b, alpha);
+            colors[i] = new Color(r, g, b, alpha / 3);
         }
         for (int i = 8; i <= 15; i++) {
             float t = (i - 8) / 7f;
@@ -45,7 +43,7 @@ public class Quad implements Renderable
             float g = 0.5f + t * 0.5f;
             float b = 0f;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha);
+            colors[i] = new Color(r, g, b, alpha / 3);
         }
         for (int i = 16; i <= 23; i++) {
             float t = (i - 16) / 7f;
@@ -54,7 +52,7 @@ public class Quad implements Renderable
             float g = 1f;
             float b = 0f;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha);
+            colors[i] = new Color(r, g, b, alpha / 3);
         }
         for (int i = 24; i <= 31; i++) {
             float t = (i - 24) / 7f;
@@ -62,7 +60,7 @@ public class Quad implements Renderable
             float g = 1f;
             float b = t;
             float alpha = 0.9f;
-            colors[i] = new Color(r, g, b, alpha);
+            colors[i] = new Color(r, g, b, alpha / 3);
         }
     }
 

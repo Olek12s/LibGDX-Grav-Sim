@@ -39,12 +39,12 @@ public class Body implements Renderable, Updatable
         this.velocity = velocity;
         this.mass = mass;
         this.color = color;
+        this.acceleration = new Vector2();
     }
 
     @Override
     public void render() {
         float zoom = Main.getInstance().getCameraController().getCamera().zoom;
-
         Resources.batch.setColor(color);
         Resources.batch.draw(texture, position.x - zoom/2f, position.y - zoom/2f, zoom, zoom);
         //Resources.batch.setColor(Color.WHITE);

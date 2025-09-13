@@ -58,6 +58,7 @@ import io.gith.lwjgl3.Updatable;
 
 import java.util.ArrayList;
 
+/*
 public class QuadTree implements Updatable
 {
     private int root;
@@ -103,11 +104,12 @@ public class QuadTree implements Updatable
         this.nodes.add(new Node());
     }
 
-    /**
+   // /**
      * adds a new body to the quadtree, subdividing nodes as necessary so that each body ends up in the correct leaf.
      * @param pos - position of new body
      * @param mass - mass of new body
-     */
+   //  */
+/*
     private void insert(int nodeIndex, Vector2 pos, float mass) {
         Node node = nodes.get(nodeIndex);
 
@@ -140,14 +142,14 @@ public class QuadTree implements Updatable
             }
         } else {
             // branch → idź do odpowiedniego dziecka
-            int childIndex = node.getChildren() + node.getQuad().findQuadrant(pos);
+            int childIndex = node.getFirstChild() + node.getQuad().findQuadrant(pos);
             insert(childIndex, pos, mass);
         }
     }
 
 
-
-    /**
+/*
+   // /**
      * Subdivides the given node into four child nodes, representing the four quadrants
      * of the node's current square (Quad).
      *
@@ -162,12 +164,13 @@ public class QuadTree implements Updatable
      * @param nodeIndex the index of the node to subdivide in the quadtree's node list
      * @return the index of the first child node created
      */
+/*
     public int subDivide(int nodeIndex) {
         System.out.println("sub1");
         Node node = nodes.get(nodeIndex);
 
         int children = nodes.size();    // idx of first child
-        node.setChildren(children);
+        node.setFirstChild(children);
 
         Quad[] quads = node.getQuad().toQuadrants();
 
@@ -192,7 +195,7 @@ public class QuadTree implements Updatable
 
             if (node.isLeaf()) continue; // leaf nodes already store mass and position
 
-            int firstChild = node.getChildren();
+            int firstChild = node.getFirstChild();
 
             // sum weighted positions of children
             Vector2 bodyPos = new Vector2(0, 0);
@@ -238,7 +241,7 @@ public class QuadTree implements Updatable
             else {
                 for (int i = 0; i < 4; i++)     // push children onto stack to traverse deeper
                 {
-                    stack.add(n.getChildren() + i);
+                    stack.add(n.getFirstChild() + i);
                 }
             }
         }
@@ -247,6 +250,7 @@ public class QuadTree implements Updatable
     */
 
     // faster acceleration method
+/*
     public Vector2 acceleration(Vector2 pos, float theta, float epsilon) {
         Vector2 acc = new Vector2(0, 0);
         float t_sq = theta * theta;
@@ -272,7 +276,7 @@ public class QuadTree implements Updatable
                 nodeIndex = n.getNext();
             }
             else {
-                nodeIndex = n.getChildren();     // traverse to first child to process sub-quadrants
+                nodeIndex = n.getFirstChild();     // traverse to first child to process sub-quadrants
             }
         }
 
@@ -290,7 +294,7 @@ public class QuadTree implements Updatable
         }
 
         if (!node.isLeaf()) {
-            int firstChild = node.getChildren();
+            int firstChild = node.getFirstChild();
             for (int i = 0; i < 4; i++) {
                 renderNode(nodes.get(firstChild + i));
                 System.out.println(i);
@@ -311,4 +315,77 @@ public class QuadTree implements Updatable
 
         propagate();
     }
+    */
+
+public class QuadTree
+{
+    private ArrayList<Node> nodes;  // [0] - root
+
+    public QuadTree() {
+        nodes = new ArrayList<>();
+        nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, 11))));  // 0x7FFF_FFFF int max
+    }
+
+    public void insertBody(int nodeIndex, Vector2 pos, float mass)
+    {
+        Node node = nodes.get(nodeIndex);
+        System.out.println("insertBody call: " + nodeIndex + " " + pos + " " + mass + " size: " + node.getQuad().getSize());
+        while(true)
+        {
+            int quadrantNum = node.getQuad().findQuadrant(pos);
+            if (quadrantNum == -1) return;  // out of bounds
+
+            if (node.isLeaf()) {    // if leaf
+                if (node.getMass() == 0f)   // empty leaf - insert body
+                {
+                    node.setMass(mass);
+                    node.setMassPosition(pos);
+                    return;
+                }
+                else if (node.getQuad().getSize() <= 1) // minimal size of Node - sum masses
+                {
+                    node.setMass(node.getMass() + mass);
+                    return;
+                }
+                else    // leaf occupied - divide into quadrants
+                {
+                    Quad[] quadrants = node.getQuad().toQuadrants();
+                    int firstChildIndex = nodes.size();
+                    node.setFirstChild(firstChildIndex);
+
+                    for (int i = 0; i < 4; i++) {
+                        nodes.add(new Node(quadrants[i]));
+                    }
+
+                    // move previous body to one of the children
+                    Vector2 existingPos = new Vector2(node.getMassPosition());
+                    float existingMass = node.getMass();
+                    node.setMass(0f);
+
+                    int existingQuadrant = node.getQuad().findQuadrant(existingPos);
+                    insertBody(firstChildIndex + existingQuadrant, existingPos, existingMass);
+
+                    node = nodes.get(firstChildIndex + quadrantNum);
+                    System.out.println(node.getQuad().getSize());
+                }
+            }
+            else    // is not leaf -> go deeper
+            {
+                node = nodes.get(node.getFirstChild() + quadrantNum);
+                System.out.println(":" + node.getQuad().getSize());
+            }
+        }
+    }
+
+    public void erase() {
+        nodes.clear();
+        nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, 11))));
+    }
+
+    public void renderVisualization()
+    {
+        nodes.get(0).getQuad().render();
+    }
+
 }
+
