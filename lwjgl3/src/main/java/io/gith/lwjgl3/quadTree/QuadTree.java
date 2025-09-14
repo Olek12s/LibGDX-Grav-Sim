@@ -9,8 +9,8 @@ public class QuadTree
     private ArrayList<Node> nodes;  // [0] - root
     public static final int maxDepth = 30;     //TODO: make it dynamic
     public static float theta = 0.5f;   // 0 - On^2
-    public static float epsilon = 50.00f;
-    public static float G = 6.67430e-1f;           // original G: G = 6.67430e-11f
+    public static float epsilon = 1155.00f;
+    public static float G = 6.67430e-2f;           // original G: G = 6.67430e-11f
 
     public ArrayList<Node> getNodes() {
         return nodes;
@@ -130,24 +130,27 @@ public class QuadTree
         }
     }
 
+    private final Vector2 tmp = new Vector2();
+
     private void applyForce(int nodeIndex, Body body, Vector2 acceleration) {
         Node node = nodes.get(nodeIndex);
-        Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());
-        float dSq = d.len2();
-        float quadSizeSq = (float)Math.pow(node.getQuad().getSize(), 2);
+        if (node.getMass() == 0) return;
+
+        tmp.set(node.getMassPosition()).sub(body.getPosition());
+        float dSq = tmp.len2();
+        float quadSizeSq = node.getQuad().getSize() * node.getQuad().getSize();
         float thetaSq = theta * theta;
         float epsilonSq = epsilon * epsilon;
 
-        // ignoruj masę jeśli węzeł zawiera dokładnie to ciało
         if (node.isLeaf() && node.getBodies().size() == 1 && node.getBodies().get(0) == body) {
-            return;
+            return; // ignoruj samego siebie
         }
 
         if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {
             if (dSq > 0) {
                 float invDist = 1f / (float)Math.sqrt(dSq + epsilonSq);
                 float invDist3 = invDist * invDist * invDist;
-                acceleration.mulAdd(d, G * node.getMass() * invDist3);
+                acceleration.mulAdd(tmp, G * node.getMass() * invDist3);
             }
         } else {
             for (int i = 0; i < 4; i++) {

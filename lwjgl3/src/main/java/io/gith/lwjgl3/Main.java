@@ -63,7 +63,7 @@ public class Main extends ApplicationAdapter {
 
         quadTree = new QuadTree();
         //galaxy(15000, 500f, 1_000_00f);
-        galaxy(15000, 500f, 1f);
+        galaxy(200000, 900f, 10_000_000f);
         //b = new Body(new Vector2(50,64), new Vector2(0,0), 1000000f, new Color(Color.PINK));
         //quadTree.insertBody(0, b);
         //particles.add(b);
@@ -92,16 +92,23 @@ public class Main extends ApplicationAdapter {
     }
 
     public void galaxy(int n, float radius, float centralMass) {
-        Body central = new Body(
-            new Vector2(0, 0),
-            new Vector2(0, 0),
-            centralMass,
-            Color.YELLOW
-        );
-        particles.add(central);
-        renderables.add(central);
-        updatables.add(central);
-        quadTree.insertBody(0, central);
+        Body central1 = new Body(new Vector2(0, 0), new Vector2(0, 0), centralMass, Color.YELLOW);
+        particles.add(central1);
+        renderables.add(central1);
+        updatables.add(central1);
+        quadTree.insertBody(0, central1);
+
+        Body central2 = new Body(new Vector2(1000, -531), new Vector2(0, 0), centralMass/2, Color.YELLOW);
+        particles.add(central2);
+        renderables.add(central2);
+        updatables.add(central2);
+        quadTree.insertBody(0, central2);
+
+        Body central3 = new Body(new Vector2(-2000, -531), new Vector2(0, 0), centralMass/2, Color.YELLOW);
+        particles.add(central3);
+        renderables.add(central3);
+        updatables.add(central3);
+        quadTree.insertBody(0, central3);
 
         Random r = new Random();
 
@@ -112,15 +119,16 @@ public class Main extends ApplicationAdapter {
             float x = (float) Math.cos(angle) * dist;
             float y = (float) Math.sin(angle) * dist;
 
-            float speed = (float) Math.sqrt(QuadTree.G * centralMass / dist);
-            float vx = (float) -Math.sin(angle) * speed;
-            float vy = (float) Math.cos(angle) * speed;
+            float speed = (float) Math.sqrt(QuadTree.G * centralMass / dist) / 64;
+            float vx = (float) -Math.sin(angle) * speed / 64;
+            float vy = (float) Math.cos(angle) * speed / 64;
 
             Body b = new Body(
                 new Vector2(x, y),
-                new Vector2(vx/2, vy/2),
-                r.nextInt(100),
-                Color.CYAN
+                new Vector2(vx/64, vy/64),
+                Math.max(r.nextInt(10), 1),
+                //0.1f,
+                Color.GRAY
             );
 
             particles.add(b);
@@ -182,13 +190,12 @@ public class Main extends ApplicationAdapter {
                 r.render();
         }
 
-
         quadTree.erase();
         for (Body b : particles) {
             quadTree.insertBody(0, b);
         }
-        long start = System.nanoTime();
         quadTree.updateMassDirstribution();
+        long start = System.nanoTime();
         quadTree.updateGravitationalAcceleration();
         long end = System.nanoTime();
         long durationUs = (end - start) / 1_000;
@@ -197,7 +204,7 @@ public class Main extends ApplicationAdapter {
         System.out.println(durationMs + " ms");
         System.out.println("Nodes: " + quadTree.getNodes().size());
 
-        //quadTree.renderVisualization();
+        quadTree.renderVisualization();
         //quadTree.renderRootVisualization();
 
 
