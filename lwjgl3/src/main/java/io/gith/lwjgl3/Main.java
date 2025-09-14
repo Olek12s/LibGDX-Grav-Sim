@@ -62,13 +62,15 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 100000;
+        int n = 10;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
                 new Vector2(r.nextInt(50), r.nextInt(50)),
                 new Vector2(r.nextFloat() * 10f - 5f, r.nextFloat() * 10f - 5f),
-                r.nextInt(Math.max(1, 50)),
+                1f,
+                //r.nextInt(Math.max(1, 2)),
+
                 //new Vector2(r.nextInt(12), r.nextInt(12)),
                 //new Vector2(0,0),
                 //r.nextInt(50),
@@ -143,11 +145,11 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree.erase();
-        long start = System.nanoTime();
         for (Body b : particles) {
             //quadTree.insertBody(0, b.getPosition(), b.getMass());
             quadTree.insertBody(0, b);
         }
+        long start = System.nanoTime();
         quadTree.updateMassDirstribution();
         long end = System.nanoTime();
         long durationUs = (end - start) / 1_000;

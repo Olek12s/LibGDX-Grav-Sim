@@ -176,14 +176,14 @@ public class QuadTree
                 massCenter.scl(1f / mass); // scale by scalar
             }
 
-            node.setMass(mass);
+            node.setMass(mass); // no mass if leaf has no bodies
             node.setMassPosition(massCenter);
         }
         else    // children are present - masses are computed by bottom-up approach (propagation)
         {
             for (int i = 0; i < 4; i++) {
                 int childIndex = node.getFirstChild() + i;
-                updateMassAndCenter(childIndex);
+                updateMassAndCenter(childIndex);        // bottom up approach - update children
 
                 Node child = nodes.get(childIndex);
                 mass += child.getMass();
