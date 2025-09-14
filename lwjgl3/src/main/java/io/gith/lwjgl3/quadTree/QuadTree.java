@@ -7,7 +7,10 @@ import java.util.ArrayList;
 public class QuadTree
 {
     private ArrayList<Node> nodes;  // [0] - root
-    private static final int maxDepth = 18;     //TODO: make it dynamic
+    public static final int maxDepth = 30;     //TODO: make it dynamic
+    public static float theta = 0.5f;   // 0 - On^2
+    public static float epsilon = 50.00f;
+    public static float G = 6.67430e-1f;           // original G: G = 6.67430e-11f
 
     public ArrayList<Node> getNodes() {
         return nodes;
@@ -18,57 +21,6 @@ public class QuadTree
         nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));  // 0x7FFF_FFFF int max
     }
 
-    /*
-    public void insertBody(int nodeIndex, Vector2 pos, float mass)
-    {
-        Node node = nodes.get(nodeIndex);
-        while(true)
-        {
-            int quadrantNum = node.getQuad().findQuadrant(pos);
-            if (quadrantNum == -1) {
-                System.out.println("Body out of bounds of the QuadTree");
-                return;  // out of bounds
-            }
-
-            if (node.isLeaf()) {    // if leaf
-                if (node.getMass() == 0f)   // empty leaf - insert body
-                {
-                    node.setMass(mass);
-                    node.setMassPosition(pos);
-                    return;
-                }
-                else if (node.getQuad().getSize() <= 128) // minimal size of Node - sum masses
-                {
-                    node.setMass(node.getMass() + mass);
-                    return;
-                }
-                else    // leaf occupied - divide into quadrants
-                {
-                    Quad[] quadrants = node.getQuad().toQuadrants();
-                    int firstChildIndex = nodes.size();
-                    node.setFirstChild(firstChildIndex);
-
-                    for (int i = 0; i < 4; i++) {
-                        nodes.add(new Node(quadrants[i]));
-                    }
-
-                    // move previous body to one of the children
-
-
-                    //node.setMass(0f);
-                    int existingQuadrant = node.getQuad().findQuadrant(node.getMassPosition());
-                    insertBody(firstChildIndex + existingQuadrant, node.getMassPosition(), node.getMass());
-
-                    node = nodes.get(firstChildIndex + quadrantNum);
-                }
-            }
-            else    // is not leaf -> go deeper
-            {
-                node = nodes.get(node.getFirstChild() + quadrantNum);
-            }
-        }
-    }
-    */
     public void insertBody(int nodeIndex, Body body)
     {
         Node node = nodes.get(nodeIndex);
@@ -124,40 +76,6 @@ public class QuadTree
         nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));
     }
 
-
-
-    private boolean renderLeafSiblings(int nodeIndex) {
-        Node node = nodes.get(nodeIndex);
-
-        if (node.isLeaf()) {
-            return !node.getBodies().isEmpty();
-        }
-
-        int firstChild = node.getFirstChild();
-        boolean anyChildHasBody = false;
-        boolean[] childHasBody = new boolean[4];
-
-        for (int i = 0; i < 4; i++) {
-            childHasBody[i] = renderLeafSiblings(firstChild + i);
-            anyChildHasBody |= childHasBody[i];
-        }
-
-        for (int i = 0; i < 4; i++) {
-            Node child = nodes.get(firstChild + i);
-            if (child.isLeaf() && childHasBody[i]) {
-                for (int j = 0; j < 4; j++) {
-                    Node sibling = nodes.get(firstChild + j);
-                    if (sibling.isLeaf() && !sibling.getBodies().isEmpty()) {
-                        sibling.getQuad().render();
-                    }
-                }
-                break;
-            }
-        }
-
-        return anyChildHasBody;
-    }
-
     private void updateMassAndCenter(int nodeIndex)
     {
         Node node = nodes.get(nodeIndex);
@@ -199,6 +117,49 @@ public class QuadTree
         }
     }
 
+    public void updateGravitationalAcceleration()
+    {
+        for (Node node : nodes) {
+            if (node.isLeaf()) {
+                for (Body b : node.getBodies()) {
+                    Vector2 acceleration = new Vector2();
+                    applyForce(0, b, acceleration);
+                    b.getAcceleration().set(acceleration);
+                }
+            }
+        }
+    }
+
+    private void applyForce(int nodeIndex, Body body, Vector2 acceleration) {
+        Node node = nodes.get(nodeIndex);
+        Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());
+        float dSq = d.len2();
+        float quadSizeSq = (float)Math.pow(node.getQuad().getSize(), 2);
+        float thetaSq = theta * theta;
+        float epsilonSq = epsilon * epsilon;
+
+        // ignoruj masę jeśli węzeł zawiera dokładnie to ciało
+        if (node.isLeaf() && node.getBodies().size() == 1 && node.getBodies().get(0) == body) {
+            return;
+        }
+
+        if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {
+            if (dSq > 0) {
+                float invDist = 1f / (float)Math.sqrt(dSq + epsilonSq);
+                float invDist3 = invDist * invDist * invDist;
+                acceleration.mulAdd(d, G * node.getMass() * invDist3);
+            }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                int childIndex = node.getFirstChild() + i;
+                if (childIndex < nodes.size()) {
+                    applyForce(childIndex, body, acceleration);
+                }
+            }
+        }
+    }
+
+
 
     public void updateMassDirstribution()
     {
@@ -214,6 +175,43 @@ public class QuadTree
     public void renderVisualization() {
         if (nodes.isEmpty()) return;
         renderLeafSiblings(0);
+    }
+
+    private boolean renderLeafSiblings(int nodeIndex) {
+        Node node = nodes.get(nodeIndex);
+
+        if (node.isLeaf()) {
+            if (!node.getBodies().isEmpty()) {
+                node.getQuad().render();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        int firstChild = node.getFirstChild();
+        boolean anyChildHasBody = false;
+        boolean[] childHasBody = new boolean[4];
+
+        for (int i = 0; i < 4; i++) {
+            childHasBody[i] = renderLeafSiblings(firstChild + i);
+            anyChildHasBody |= childHasBody[i];
+        }
+
+        for (int i = 0; i < 4; i++) {
+            Node child = nodes.get(firstChild + i);
+            if (child.isLeaf() && childHasBody[i]) {
+                for (int j = 0; j < 4; j++) {
+                    Node sibling = nodes.get(firstChild + j);
+                    if (sibling.isLeaf() && !sibling.getBodies().isEmpty()) {
+                        sibling.getQuad().render();
+                    }
+                }
+                break;
+            }
+        }
+
+        return anyChildHasBody;
     }
 
     public void renderRootVisualization() {

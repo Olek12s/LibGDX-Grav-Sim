@@ -35,7 +35,7 @@ public class CameraController implements Updatable
             camera.zoom += scrollY * 0.1f;
 
             if (camera.zoom < 0.1f) camera.zoom = 0.1f;
-            if (camera.zoom > 10f) camera.zoom = 10f;
+            if (camera.zoom > 50f) camera.zoom = 50f;
 
             input.resetScroll();
         }

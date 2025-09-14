@@ -21,6 +21,15 @@ public class Body implements Renderable, Updatable
 
     public Vector2 getPosition() {return position;}
     public Vector2 getVelocity() {return velocity;}
+
+    public Vector2 getAcceleration() {
+        return acceleration;
+    }
+
+    public void setAcceleration(Vector2 acceleration) {
+        this.acceleration = acceleration;
+    }
+
     public float getMass() {return mass;}
     public Color getColor() {return color;}
     public static Texture getTexture() {return texture;}
@@ -57,4 +66,17 @@ public class Body implements Renderable, Updatable
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+            "Body{position=(%.15f, %.15f),\n velocity=(%.15f, %.15f),\n acceleration=(%.15f, %.15f),\n mass=%.1f, color=%s}",
+            position.x, position.y,
+            velocity.x, velocity.y,
+            acceleration.x, acceleration.y,
+            mass,
+            color
+        );
+    }
+
 }

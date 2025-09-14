@@ -23,6 +23,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Updatable> updatables;
     private static int MAX_UPS = 30;   // logic updates per second
     private static int MAX_FPS = 30;   // rendering frames per second
+    private static int SS = 4;
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -44,7 +45,6 @@ public class Main extends ApplicationAdapter {
     public ArrayList<Body> getParticles() {
         return particles;
     }
-
     public void create() {
         instance = this;
         particles = new ArrayList<>();
@@ -62,14 +62,23 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 10;
+        //galaxy(15000, 500f, 1_000_00f);
+        galaxy(15000, 500f, 1f);
+        //b = new Body(new Vector2(50,64), new Vector2(0,0), 1000000f, new Color(Color.PINK));
+        //quadTree.insertBody(0, b);
+        //particles.add(b);
+        //updatables.add(b);
+        //renderables.add(b);
+        int n = 0;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
                 new Vector2(r.nextInt(50), r.nextInt(50)),
-                new Vector2(r.nextFloat() * 10f - 5f, r.nextFloat() * 10f - 5f),
-                1f,
-                //r.nextInt(Math.max(1, 2)),
+                //new Vector2(r.nextFloat() * 10f - 5f, r.nextFloat() * 10f - 5f),
+                //new Vector2(0,0),
+                new Vector2(r.nextFloat() * 0.10f, r.nextFloat() * 0.10f),
+                r.nextInt(500),
+                //r.nextInt(Math.max(1, 2000)),
 
                 //new Vector2(r.nextInt(12), r.nextInt(12)),
                 //new Vector2(0,0),
@@ -80,17 +89,47 @@ public class Main extends ApplicationAdapter {
             updatables.add(body);
             renderables.add(body);
         }
-
-        /*
-        for (int i = 0; i < 5; i++) {
-            Body b1 = (new Body(new Vector2(0,0), new Vector2(0,0),1,Color.WHITE));
-            Body b2 = (new Body(new Vector2(2f,0), new Vector2(0,0),1,Color.WHITE));
-            particles.add(b1);
-            updatables.add(b1);
-            renderables.add(b1);
-        }
-        */
     }
+
+    public void galaxy(int n, float radius, float centralMass) {
+        Body central = new Body(
+            new Vector2(0, 0),
+            new Vector2(0, 0),
+            centralMass,
+            Color.YELLOW
+        );
+        particles.add(central);
+        renderables.add(central);
+        updatables.add(central);
+        quadTree.insertBody(0, central);
+
+        Random r = new Random();
+
+        for (int i = 0; i < n; i++) {
+            double angle = r.nextDouble() * Math.PI * 2;
+            float dist = radius * (0.9f + r.nextFloat() * 0.2f);
+
+            float x = (float) Math.cos(angle) * dist;
+            float y = (float) Math.sin(angle) * dist;
+
+            float speed = (float) Math.sqrt(QuadTree.G * centralMass / dist);
+            float vx = (float) -Math.sin(angle) * speed;
+            float vy = (float) Math.cos(angle) * speed;
+
+            Body b = new Body(
+                new Vector2(x, y),
+                new Vector2(vx/2, vy/2),
+                r.nextInt(100),
+                Color.CYAN
+            );
+
+            particles.add(b);
+            renderables.add(b);
+            updatables.add(b);
+            quadTree.insertBody(0, b);
+        }
+    }
+
 
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
@@ -99,7 +138,7 @@ public class Main extends ApplicationAdapter {
 
         while (accumulator >= logicInterval) {
             for (Updatable u : updatables) {
-                u.update(logicInterval);
+                u.update(logicInterval * SS);
             }
             accumulator -= logicInterval;
             updates++;
@@ -146,11 +185,11 @@ public class Main extends ApplicationAdapter {
 
         quadTree.erase();
         for (Body b : particles) {
-            //quadTree.insertBody(0, b.getPosition(), b.getMass());
             quadTree.insertBody(0, b);
         }
         long start = System.nanoTime();
         quadTree.updateMassDirstribution();
+        quadTree.updateGravitationalAcceleration();
         long end = System.nanoTime();
         long durationUs = (end - start) / 1_000;
         long durationMs = (end - start) / 1_000_000;
@@ -158,7 +197,7 @@ public class Main extends ApplicationAdapter {
         System.out.println(durationMs + " ms");
         System.out.println("Nodes: " + quadTree.getNodes().size());
 
-        quadTree.renderVisualization();
+        //quadTree.renderVisualization();
         //quadTree.renderRootVisualization();
 
 
