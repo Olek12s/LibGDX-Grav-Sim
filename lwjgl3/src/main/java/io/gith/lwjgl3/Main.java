@@ -190,19 +190,32 @@ public class Main extends ApplicationAdapter {
                 r.render();
         }
 
+        long start = System.nanoTime();
         quadTree.erase();
+
+        long t1 = System.nanoTime();
         for (Body b : particles) {
             quadTree.insertBody(0, b);
         }
+        long t2 = System.nanoTime();
         quadTree.updateMassDirstribution();
-        long start = System.nanoTime();
-        quadTree.updateGravitationalAcceleration();
-        long end = System.nanoTime();
-        long durationUs = (end - start) / 1_000;
-        long durationMs = (end - start) / 1_000_000;
-        System.out.println(durationUs + " us");
-        System.out.println(durationMs + " ms");
+        long t3 = System.nanoTime();
+        quadTree.updateGravitationalAcceleration(particles);
+        long t4 = System.nanoTime();
+
+        long eraseTime = t1 - start;
+        long insertTime = t2 - t1;
+        long massTime = t3 - t2;
+        long gravityTime = t4 - t3;
+        long totalTime = t4 - start;
+
         System.out.println("Nodes: " + quadTree.getNodes().size());
+        System.out.println("erase: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float)eraseTime / totalTime)*100 + "%");
+        System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float)insertTime / totalTime)*100 + "%");
+        System.out.println("mass distribution: " + massTime / 1_000 + " us | " + massTime / 1_000_000 + " ms | " + ((float)massTime / totalTime)*100 + "%");
+        System.out.println("gravitational acceleration: " + gravityTime / 1_000 + " us | " + gravityTime / 1_000_000 + " ms | " + ((float)gravityTime / totalTime)*100 + "%");
+        System.out.println("TOTAL: " + totalTime / 1_000 + " us | " + totalTime / 1_000_000 + " ms | " + ((float)totalTime / totalTime)*100 + "%");
+        System.out.println();
 
         quadTree.renderVisualization();
         //quadTree.renderRootVisualization();

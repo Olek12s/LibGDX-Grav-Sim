@@ -12,6 +12,7 @@ public class QuadTree
     public static float epsilon = 1155.00f;
     public static float G = 6.67430e-2f;           // original G: G = 6.67430e-11f
 
+
     public ArrayList<Node> getNodes() {
         return nodes;
     }
@@ -117,42 +118,38 @@ public class QuadTree
         }
     }
 
-    public void updateGravitationalAcceleration()
-    {
-        for (Node node : nodes) {
-            if (node.isLeaf()) {
-                for (Body b : node.getBodies()) {
-                    Vector2 acceleration = new Vector2();
-                    applyForce(0, b, acceleration);
-                    b.getAcceleration().set(acceleration);
-                }
-            }
+    public void updateGravitationalAcceleration(ArrayList<Body> bodies) {
+        for (Body b : bodies) {
+            b.getAcceleration().set(0, 0);
+            applyForce(0, b, b.getAcceleration());
         }
     }
 
-    private final Vector2 tmp = new Vector2();
 
-    private void applyForce(int nodeIndex, Body body, Vector2 acceleration) {
+
+    private void applyForce(int nodeIndex, Body body, Vector2 acceleration)
+    {
         Node node = nodes.get(nodeIndex);
         if (node.getMass() == 0) return;
-
-        tmp.set(node.getMassPosition()).sub(body.getPosition());
-        float dSq = tmp.len2();
+        Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());    // distance vector between body and node's mass position
+        float dSq = d.len2();   // squared length
         float quadSizeSq = node.getQuad().getSize() * node.getQuad().getSize();
         float thetaSq = theta * theta;
         float epsilonSq = epsilon * epsilon;
 
         if (node.isLeaf() && node.getBodies().size() == 1 && node.getBodies().get(0) == body) {
-            return; // ignoruj samego siebie
+            return; // ignore self
         }
 
-        if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {
-            if (dSq > 0) {
-                float invDist = 1f / (float)Math.sqrt(dSq + epsilonSq);
+        if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {  // compute acceleration by considering node total mass if leaf or met criteria
+            if (dSq > 0) {  // division by zero
+                float invDist = 1.0f / (float)Math.sqrt(dSq + epsilonSq);
                 float invDist3 = invDist * invDist * invDist;
-                acceleration.mulAdd(tmp, G * node.getMass() * invDist3);
+                acceleration.mulAdd(d, G * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)
             }
-        } else {
+        }
+        else    // compute acceleration by checking the children, if node is not leaf and does not met criteria of θ (recursion)
+        {
             for (int i = 0; i < 4; i++) {
                 int childIndex = node.getFirstChild() + i;
                 if (childIndex < nodes.size()) {
@@ -161,9 +158,6 @@ public class QuadTree
             }
         }
     }
-
-
-
     public void updateMassDirstribution()
     {
         if (!nodes.isEmpty())
@@ -171,8 +165,6 @@ public class QuadTree
             updateMassAndCenter(0);
         }
     }
-
-
 
 
     public void renderVisualization() {
