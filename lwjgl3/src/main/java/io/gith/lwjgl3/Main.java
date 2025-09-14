@@ -62,7 +62,7 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 100000;
+        int n = 300000;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
