@@ -102,13 +102,14 @@ public class QuadTree
                     }
 
                     // move all bodies to the children
-                    ArrayList<Body> oldBodies = new ArrayList<>(node.getBodies());
-                    node.getBodies().clear();
+                    //ArrayList<Body> oldBodies = new ArrayList<>(node.getBodies());
+                    //node.getBodies().clear();
 
-                    for (Body b : oldBodies) {
+                    for (Body b : node.getBodies()) {
                         int childQuadrant = node.getQuad().findQuadrant(b.getPosition());
                         insertBody(firstChildIndex + childQuadrant, b);
                     }
+                    node.getBodies().clear();
                     node = nodes.get(firstChildIndex + quadrantNum);
                 }
             }
@@ -156,6 +157,59 @@ public class QuadTree
 
         return anyChildHasBody;
     }
+
+    private void updateMassAndCenter(int nodeIndex)
+    {
+        Node node = nodes.get(nodeIndex);
+        float mass = 0f;
+        Vector2 massCenter = new Vector2();
+
+        if (node.isLeaf()) {    // no children  masses are computed by all bodies contained by node
+
+            for (Body b : node.getBodies()) {
+                mass += b.getMass();
+                massCenter.x += b.getPosition().x * b.getMass();
+                massCenter.y += b.getPosition().y * b.getMass();
+            }
+
+            if (mass > 0) {
+                massCenter.scl(1f / mass); // scale by scalar
+            }
+
+            node.setMass(mass);
+            node.setMassPosition(massCenter);
+        }
+        else    // children are present - masses are computed by bottom-up approach (propagation)
+        {
+            for (int i = 0; i < 4; i++) {
+                int childIndex = node.getFirstChild() + i;
+                updateMassAndCenter(childIndex);
+
+                Node child = nodes.get(childIndex);
+                mass += child.getMass();
+                massCenter.x += child.getMassPosition().x * child.getMass();
+                massCenter.y += child.getMassPosition().y * child.getMass();
+            }
+
+            if (mass > 0) {
+                massCenter.scl(1f / mass); // scale by scalar
+            }
+            node.setMass(mass);
+            node.setMassPosition(massCenter);
+        }
+    }
+
+
+    public void updateMassDirstribution()
+    {
+        if (!nodes.isEmpty())
+        {
+            updateMassAndCenter(0);
+        }
+    }
+
+
+
 
     public void renderVisualization() {
         if (nodes.isEmpty()) return;

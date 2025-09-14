@@ -62,7 +62,7 @@ public class Main extends ApplicationAdapter {
 
 
         quadTree = new QuadTree();
-        int n = 300000;
+        int n = 100000;
         Random r = new Random();
         for (int i = 0; i < n; i++) {
             Body body = (new Body(
@@ -148,6 +148,7 @@ public class Main extends ApplicationAdapter {
             //quadTree.insertBody(0, b.getPosition(), b.getMass());
             quadTree.insertBody(0, b);
         }
+        quadTree.updateMassDirstribution();
         long end = System.nanoTime();
         long durationUs = (end - start) / 1_000;
         long durationMs = (end - start) / 1_000_000;
