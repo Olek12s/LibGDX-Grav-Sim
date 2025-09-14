@@ -9,7 +9,7 @@ public class QuadTree
     private ArrayList<Node> nodes;  // [0] - root
     public static final int maxDepth = 30;     //TODO: make it dynamic
     public static float theta = 0.5f;   // 0 - On^2
-    public static float epsilon = 1155.00f;
+    public static float epsilon = 155.00f;
     public static float G = 6.67430e-2f;           // original G: G = 6.67430e-11f
 
 
@@ -81,7 +81,9 @@ public class QuadTree
     {
         Node node = nodes.get(nodeIndex);
         float mass = 0f;
-        Vector2 massCenter = new Vector2();
+        //Vector2 massCenter = new Vector2();
+        Vector2 massCenter = node.getMassPosition();
+        massCenter.set(0, 0);
 
         if (node.isLeaf()) {    // no children  masses are computed by all bodies contained by node
 
