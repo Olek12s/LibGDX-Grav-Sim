@@ -3,7 +3,6 @@ package io.gith.lwjgl3.quadTree;
 
 import com.badlogic.gdx.math.Vector2;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
@@ -12,7 +11,7 @@ public class QuadTree
     private ArrayList<Node> nodes;  // [0] - root
     public static float theta = 0.5f;   // 0 - On^2
     public static float epsilon = 5.05f;
-    public static float G = 6.67430e-3f;           // original G: G = 6.67430e-11f
+    public static float G = 6.67430e-5f;           // original G: G = 6.67430e-11f
     private static ExecutorService executorService;
     private static int threadNum;
     static
@@ -56,6 +55,82 @@ public class QuadTree
         nodes.clear();
         //nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));
     }
+
+
+    public void insertBodyParallel(int nodeIndex, ArrayList<Body> bodies) {
+        insertBodyParallel(nodeIndex, bodies, 0, 3);
+    }
+
+    private void insertBodyParallel(int nodeIndex, ArrayList<Body> bodies, int depth, int maxDepth) {
+        Node node = nodes.get(nodeIndex);
+        if (bodies == null || bodies.isEmpty()) return;
+
+        // stop condition
+        if (bodies.size() <= Node.MAX_BODIES_PER_NODE || node.getQuad().getSize() <= Quad.MIN_QUAD_SIZE) {
+            node.setBodies(bodies);
+            return;
+        }
+
+        // divide into 4 quadrants
+        Quad[] quadrants = node.getQuad().toQuadrants();
+        int firstChildIndex;
+        Node[] newNodes = new Node[4];
+        for (int i = 0; i < 4; i++) {
+            newNodes[i] = new Node(quadrants[i]);
+            newNodes[i].setBodies(new ArrayList<>());
+        }
+
+        synchronized (nodes) {
+            firstChildIndex = nodes.size();
+            node.setFirstChild(firstChildIndex);
+            for (Node n : newNodes) nodes.add(n);
+        }
+
+        // divide bodies between children
+        ArrayList<Body>[] divided = new ArrayList[4];
+        for (int i = 0; i < 4; i++) divided[i] = new ArrayList<>();
+        for (Body b : bodies) {
+            int q = node.getQuad().findQuadrant(b.getPosition());
+            if (q != -1) divided[q].add(b);
+            if (q == -1) {
+                System.out.println("Body out of bounds of the QuadTree");
+                return;  // out of bounds
+            }
+        }
+        node.getBodies().clear();
+
+        // creating new tasks for pool if current depth is low
+        if (depth < maxDepth && bodies.size() > 16384) {
+            CountDownLatch latch = new CountDownLatch(4);
+            for (int i = 0; i < 4; i++) {
+                final int childIdx = firstChildIndex + i;
+                final ArrayList<Body> childBodies = divided[i];
+
+                executorService.execute(() -> {
+                    try {
+                        if (!childBodies.isEmpty()) {
+                            insertBodyParallel(childIdx, childBodies, depth + 1, maxDepth);
+                        }
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } else {
+            // after maxDepth is achieved - do it concurrent
+            for (int i = 0; i < 4; i++) {
+                if (!divided[i].isEmpty()) {
+                    insertBodyParallel(firstChildIndex + i, divided[i], depth + 1, maxDepth);
+                }
+            }
+        }
+    }
+
 
 
 
@@ -158,7 +233,7 @@ public class QuadTree
         }
     }
 
-    public void updateGravitationalAccelerationConcurrent(ArrayList<Body> bodies)
+    public void updateGravitationalAccelerationParallel(ArrayList<Body> bodies)
     {
         int chunkSize = (int) Math.ceil((double)bodies.size() / threadNum);
         CountDownLatch latch = new CountDownLatch(threadNum);

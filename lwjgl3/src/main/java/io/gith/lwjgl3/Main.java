@@ -1,32 +1,16 @@
-
-
-
-
-
-
-
-
 package io.gith.lwjgl3;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import io.gith.lwjgl3.quadTree.Body;
-import io.gith.lwjgl3.quadTree.Quad;
 import io.gith.lwjgl3.quadTree.QuadTree;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main extends ApplicationAdapter {
     private static Main instance;
@@ -75,86 +59,7 @@ public class Main extends ApplicationAdapter {
         logicInterval = 1f / MAX_UPS;
 
         // <200k make parallel
-        galaxy(150_000, 4800f, 500_000_000f);
-
-
-
-        long strt = System.nanoTime();
-        int threadNum = Runtime.getRuntime().availableProcessors();
-        //int threadNum = 1;
-        int chunkSize = (int) Math.ceil((double)particles.size() / threadNum);
-        CountDownLatch latch = new CountDownLatch(threadNum);
-        ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
-
-        float[] localMinsX = new float[threadNum];
-        float[] localMaxsX = new float[threadNum];
-        float[] localMinsY = new float[threadNum];
-        float[] localMaxsY = new float[threadNum];
-
-        for (int i = 0; i < threadNum; i++) {
-            int startIdx = i * chunkSize;
-            int endIdx = Math.min(startIdx + chunkSize, particles.size());
-
-            localMinsX[i] = Float.MAX_VALUE;
-            localMaxsX[i] = -Float.MAX_VALUE;
-            localMinsY[i] = Float.MAX_VALUE;
-            localMaxsY[i] = -Float.MAX_VALUE;
-
-            int finalI = i;
-            executorService.execute(() -> {
-                try
-                {
-                    for (int j = startIdx; j < endIdx; j++) {
-                        Body particle = particles.get(j);
-                        localMinsX[finalI] = Math.min(localMinsX[finalI], particle.getPosition().x);
-                        localMaxsX[finalI] = Math.max(localMaxsX[finalI], particle.getPosition().x);
-                        localMinsY[finalI] = Math.min(localMinsY[finalI], particle.getPosition().y);
-                        localMaxsY[finalI] = Math.max(localMaxsY[finalI], particle.getPosition().y);
-                    }
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-        try {
-            latch.await();  // block main thread till latch is not 0
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-
-        // merge results
-
-        float xMin = Float.MAX_VALUE;
-        float xMax = -Float.MAX_VALUE;
-        float yMin = Float.MAX_VALUE;
-        float yMax = -Float.MAX_VALUE;
-
-        for (int i = 0; i < threadNum; i++) {
-            xMin = Math.min(xMin, localMinsX[i]);
-            xMax = Math.max(xMax, localMaxsX[i]);
-            yMin = Math.min(yMin, localMinsY[i]);
-            yMax = Math.max(yMax, localMaxsY[i]);
-        }
-        long end = System.nanoTime();
-        System.out.println("Parallel: " + (end-strt) / 1_000_000);
-        System.out.printf("xMin=%.2f, xMax=%.2f, yMin=%.2f, yMax=%.2f%n", xMin, xMax, yMin, yMax);
-
-
-        strt = System.nanoTime();
-        xMin = Float.MAX_VALUE;
-        xMax = Float.MIN_VALUE;
-        yMin = Float.MAX_VALUE;
-        yMax = Float.MIN_VALUE;
-        for (Body b : particles) {
-            xMin = Math.min(xMin, b.getPosition().x);
-            xMax = Math.max(xMax, b.getPosition().x);
-            yMin = Math.min(yMin, b.getPosition().y);
-            yMax = Math.max(yMax, b.getPosition().y);
-        }
-        end = System.nanoTime();
-        System.out.println("Concurrent: " + (end-strt) / 1_000_000);
-        System.out.printf("xMin=%.2f, xMax=%.2f, yMin=%.2f, yMax=%.2f%n", xMin, xMax, yMin, yMax);
-        //System.exit(1);
+        galaxy(100000, 800f, 500_000_000f);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
@@ -162,6 +67,11 @@ public class Main extends ApplicationAdapter {
         particles.add(central);
         renderables.add(central);
         updatables.add(central);
+
+        Body central2 = new Body(new Vector2(110, 541), new Vector2(0, 0), centralMass, Color.YELLOW);
+        particles.add(central2);
+        renderables.add(central2);
+        updatables.add(central2);
 
         Random r = new Random();
         int arms = 8;
@@ -184,8 +94,8 @@ public class Main extends ApplicationAdapter {
 
             Body b = new Body(
                 new Vector2(x, y),
-                new Vector2(vx, vy),
-                Math.max(r.nextInt(1), 1),
+                new Vector2(vx/4, vy/4),
+                Math.max(r.nextInt(100), 1),
                 Color.LIGHT_GRAY
             );
 
@@ -251,25 +161,28 @@ public class Main extends ApplicationAdapter {
 
         long start = System.nanoTime();
         quadTree = new QuadTree(particles);
+
+
+
         long t1 = System.nanoTime();
-        for (Body b : particles) {
-            quadTree.insertBody(0, b);
-        }
+        quadTree.insertBodyParallel(0, particles);
+
         long t2 = System.nanoTime();
         quadTree.updateMassDirstribution();
         long t3 = System.nanoTime();
-        quadTree.updateGravitationalAccelerationConcurrent(particles);
+        quadTree.updateGravitationalAccelerationParallel(particles);
+        //quadTree.updateGravitationalAcceleration(particles);
         long t4 = System.nanoTime();
 
         long eraseTime = t1 - start;
-        long insertTime = t2 - t1;
+        long insertTimeParallel = t2 - t1;
         long massTime = t3 - t2;
         long gravityTime = t4 - t3;
         long totalTime = t4 - start;
 
         System.out.println("Nodes: " + quadTree.getNodes().size());
         System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float)eraseTime / totalTime)*100 + "%");
-        System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float)insertTime / totalTime)*100 + "%");
+        System.out.println("insert parallel: " + insertTimeParallel / 1_000 + " us | " + insertTimeParallel / 1_000_000 + " ms | " + ((float)insertTimeParallel / totalTime)*100 + "%");
         System.out.println("mass distribution: " + massTime / 1_000 + " us | " + massTime / 1_000_000 + " ms | " + ((float)massTime / totalTime)*100 + "%");
         System.out.println("gravitational acceleration: " + gravityTime / 1_000 + " us | " + gravityTime / 1_000_000 + " ms | " + ((float)gravityTime / totalTime)*100 + "%");
         System.out.println("TOTAL: " + totalTime / 1_000 + " us | " + totalTime / 1_000_000 + " ms | " + ((float)totalTime / totalTime)*100 + "%");
