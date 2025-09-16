@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 public class QuadTree
 {
     private ArrayList<Node> nodes;  // [0] - root
-    public static final int maxDepth = 16;     //TODO: make it dynamic
     public static float theta = 0.5f;   // 0 - On^2
     public static float epsilon = 5.05f;
     public static float G = 6.67430e-3f;           // original G: G = 6.67430e-11f
@@ -27,9 +26,35 @@ public class QuadTree
         return nodes;
     }
 
-    public QuadTree() {
-        nodes = new ArrayList<>(100000);
-        nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));  // 0x7FFF_FFFF int max
+    public QuadTree(ArrayList<Body> bodies) {
+        nodes = new ArrayList<>(160000);
+        if (bodies.isEmpty()) {
+            nodes.add(new Node(new Quad(new Vector2(0, 0), 1)));
+            return;
+        }
+        float xMin = Float.MAX_VALUE, xMax = Float.MIN_VALUE;
+        float yMin = Float.MAX_VALUE, yMax = Float.MIN_VALUE;
+        for (Body b : bodies) {
+            if (b.getPosition().x < xMin) xMin = b.getPosition().x;
+            if (b.getPosition().x > xMax) xMax = b.getPosition().x;
+            if (b.getPosition().y < yMin) yMin = b.getPosition().y;
+            if (b.getPosition().y > yMax) yMax = b.getPosition().y;
+        }
+        float width = xMax - xMin;
+        float height = yMax - yMin;
+        float size = Math.max(width, height);
+        Vector2 center = new Vector2(xMin + width / 2f, yMin + height / 2f);
+        int s = (int) Math.ceil(size);
+        int powerOf2Size = 1;
+        while (powerOf2Size < s) powerOf2Size *= 2;
+        nodes.add(new Node(new Quad(center, powerOf2Size)));
+
+        //nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));  // 0x7FFF_FFFF int max
+    }
+
+    public void erase() {
+        nodes.clear();
+        //nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));
     }
 
 
@@ -81,10 +106,6 @@ public class QuadTree
                 node = nodes.get(node.getFirstChild() + quadrantNum);
             }
         }
-    }
-    public void erase() {
-        nodes.clear();
-        nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));
     }
 
     private void updateMassAndCenter(int nodeIndex)

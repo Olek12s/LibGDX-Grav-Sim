@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 package io.gith.lwjgl3;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -67,7 +75,7 @@ public class Main extends ApplicationAdapter {
         logicInterval = 1f / MAX_UPS;
 
         // <200k make parallel
-        galaxy(100_000, 4800f, 500_000_000f);
+        galaxy(150_000, 4800f, 500_000_000f);
 
 
 
@@ -146,7 +154,7 @@ public class Main extends ApplicationAdapter {
         end = System.nanoTime();
         System.out.println("Concurrent: " + (end-strt) / 1_000_000);
         System.out.printf("xMin=%.2f, xMax=%.2f, yMin=%.2f, yMax=%.2f%n", xMin, xMax, yMin, yMax);
-        System.exit(1);
+        //System.exit(1);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
@@ -236,24 +244,17 @@ public class Main extends ApplicationAdapter {
 
         Resources.batch.begin();
 
-        quadTree = new QuadTree();
+
         for (Renderable r : renderables) {
-                r.render();
+            r.render();
         }
 
         long start = System.nanoTime();
-        quadTree.erase();
-
+        quadTree = new QuadTree(particles);
         long t1 = System.nanoTime();
-
-
-
         for (Body b : particles) {
             quadTree.insertBody(0, b);
         }
-
-
-
         long t2 = System.nanoTime();
         quadTree.updateMassDirstribution();
         long t3 = System.nanoTime();
@@ -267,7 +268,7 @@ public class Main extends ApplicationAdapter {
         long totalTime = t4 - start;
 
         System.out.println("Nodes: " + quadTree.getNodes().size());
-        System.out.println("erase: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float)eraseTime / totalTime)*100 + "%");
+        System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float)eraseTime / totalTime)*100 + "%");
         System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float)insertTime / totalTime)*100 + "%");
         System.out.println("mass distribution: " + massTime / 1_000 + " us | " + massTime / 1_000_000 + " ms | " + ((float)massTime / totalTime)*100 + "%");
         System.out.println("gravitational acceleration: " + gravityTime / 1_000 + " us | " + gravityTime / 1_000_000 + " ms | " + ((float)gravityTime / totalTime)*100 + "%");

@@ -32,7 +32,7 @@ public class CameraController implements Updatable
         InputController input = Main.getInstance().getInputController();
         float scrollY = input.getScrollY();
         if (scrollY != 0) {
-            camera.zoom += scrollY * 0.1f;
+            camera.zoom += scrollY * 0.4f;
 
             if (camera.zoom < 0.1f) camera.zoom = 0.1f;
             if (camera.zoom > 50f) camera.zoom = 50f;
