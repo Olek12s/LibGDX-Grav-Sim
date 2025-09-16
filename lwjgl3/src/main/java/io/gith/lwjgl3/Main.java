@@ -23,7 +23,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Updatable> updatables;
     private static int MAX_UPS = 30;   // logic updates per second
     private static int MAX_FPS = 30;   // rendering frames per second
-    private static int SS = 4;
+    private static int SS = 1;
     private float logicInterval;   // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -60,83 +60,49 @@ public class Main extends ApplicationAdapter {
         updatables.add(cameraController);
         logicInterval = 1f / MAX_UPS;
 
-
-        quadTree = new QuadTree();
-        //galaxy(15000, 500f, 1_000_00f);
-        galaxy(200000, 900f, 10_000_000f);
-        //b = new Body(new Vector2(50,64), new Vector2(0,0), 1000000f, new Color(Color.PINK));
-        //quadTree.insertBody(0, b);
-        //particles.add(b);
-        //updatables.add(b);
-        //renderables.add(b);
-        int n = 0;
-        Random r = new Random();
-        for (int i = 0; i < n; i++) {
-            Body body = (new Body(
-                new Vector2(r.nextInt(50), r.nextInt(50)),
-                //new Vector2(r.nextFloat() * 10f - 5f, r.nextFloat() * 10f - 5f),
-                //new Vector2(0,0),
-                new Vector2(r.nextFloat() * 0.10f, r.nextFloat() * 0.10f),
-                r.nextInt(500),
-                //r.nextInt(Math.max(1, 2000)),
-
-                //new Vector2(r.nextInt(12), r.nextInt(12)),
-                //new Vector2(0,0),
-                //r.nextInt(50),
-                new Color(0.7f,0.7f,0.7f,0.7f)));
-
-            particles.add(body);
-            updatables.add(body);
-            renderables.add(body);
-        }
+        galaxy(100000, 4800f, 500_000_000f);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
-        Body central1 = new Body(new Vector2(0, 0), new Vector2(0, 0), centralMass, Color.YELLOW);
-        particles.add(central1);
-        renderables.add(central1);
-        updatables.add(central1);
-        quadTree.insertBody(0, central1);
-
-        Body central2 = new Body(new Vector2(1000, -531), new Vector2(0, 0), centralMass/2, Color.YELLOW);
-        particles.add(central2);
-        renderables.add(central2);
-        updatables.add(central2);
-        quadTree.insertBody(0, central2);
-
-        Body central3 = new Body(new Vector2(-2000, -531), new Vector2(0, 0), centralMass/2, Color.YELLOW);
-        particles.add(central3);
-        renderables.add(central3);
-        updatables.add(central3);
-        quadTree.insertBody(0, central3);
+        Body central = new Body(new Vector2(0, 0), new Vector2(0, 0), centralMass, Color.YELLOW);
+        particles.add(central);
+        renderables.add(central);
+        updatables.add(central);
 
         Random r = new Random();
+        int arms = 8;
+        float spiralTightness = 0.5f;
+        float angleJitter = 0.2f;
 
         for (int i = 0; i < n; i++) {
-            double angle = r.nextDouble() * Math.PI * 2;
-            float dist = radius * (0.9f + r.nextFloat() * 0.2f);
+            float dist = (float)(Math.pow(r.nextFloat(), 2) * radius);
+
+            int arm = r.nextInt(arms);
+            float angle = (float) (spiralTightness * Math.log(dist + 1) + (2 * Math.PI / arms) * arm);
+            angle += r.nextGaussian() * angleJitter;
 
             float x = (float) Math.cos(angle) * dist;
             float y = (float) Math.sin(angle) * dist;
 
-            float speed = (float) Math.sqrt(QuadTree.G * centralMass / dist) / 64;
-            float vx = (float) -Math.sin(angle) * speed / 64;
-            float vy = (float) Math.cos(angle) * speed / 64;
+            float speed = (float) Math.sqrt(QuadTree.G * centralMass / (dist + QuadTree.epsilon));
+            float vx = (float) (-Math.sin(angle) * speed);
+            float vy = (float) ( Math.cos(angle) * speed);
 
             Body b = new Body(
                 new Vector2(x, y),
-                new Vector2(vx/64, vy/64),
-                Math.max(r.nextInt(10), 1),
-                //0.1f,
-                Color.GRAY
+                new Vector2(vx, vy),
+                Math.max(r.nextInt(1), 1),
+                Color.LIGHT_GRAY
             );
 
             particles.add(b);
             renderables.add(b);
             updatables.add(b);
-            quadTree.insertBody(0, b);
         }
     }
+
+
+
 
 
     public void render() {
@@ -184,8 +150,7 @@ public class Main extends ApplicationAdapter {
 
         Resources.batch.begin();
 
-
-
+        quadTree = new QuadTree();
         for (Renderable r : renderables) {
                 r.render();
         }
@@ -194,13 +159,19 @@ public class Main extends ApplicationAdapter {
         quadTree.erase();
 
         long t1 = System.nanoTime();
+
+
+
         for (Body b : particles) {
             quadTree.insertBody(0, b);
         }
+
+
+
         long t2 = System.nanoTime();
         quadTree.updateMassDirstribution();
         long t3 = System.nanoTime();
-        quadTree.updateGravitationalAcceleration(particles);
+        quadTree.updateGravitationalAccelerationConcurrent(particles);
         long t4 = System.nanoTime();
 
         long eraseTime = t1 - start;
@@ -217,7 +188,7 @@ public class Main extends ApplicationAdapter {
         System.out.println("TOTAL: " + totalTime / 1_000 + " us | " + totalTime / 1_000_000 + " ms | " + ((float)totalTime / totalTime)*100 + "%");
         System.out.println();
 
-        quadTree.renderVisualization();
+        //quadTree.renderVisualization();
         //quadTree.renderRootVisualization();
 
 

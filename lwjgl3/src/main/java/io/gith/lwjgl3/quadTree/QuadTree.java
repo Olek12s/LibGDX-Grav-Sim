@@ -2,15 +2,25 @@ package io.gith.lwjgl3.quadTree;
 
 
 import com.badlogic.gdx.math.Vector2;
+
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.concurrent.*;
 
 public class QuadTree
 {
     private ArrayList<Node> nodes;  // [0] - root
     public static final int maxDepth = 30;     //TODO: make it dynamic
     public static float theta = 0.5f;   // 0 - On^2
-    public static float epsilon = 155.00f;
-    public static float G = 6.67430e-2f;           // original G: G = 6.67430e-11f
+    public static float epsilon = 5.05f;
+    public static float G = 6.67430e-3f;           // original G: G = 6.67430e-11f
+    private static ExecutorService executorService;
+    private static int threadNum;
+    static
+    {
+        threadNum = Runtime.getRuntime().availableProcessors();
+        executorService = Executors.newFixedThreadPool(threadNum);
+    }
 
 
     public ArrayList<Node> getNodes() {
@@ -21,6 +31,8 @@ public class QuadTree
         nodes = new ArrayList<>(100000);
         nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));  // 0x7FFF_FFFF int max
     }
+
+
 
     public void insertBody(int nodeIndex, Body body)
     {
@@ -55,8 +67,6 @@ public class QuadTree
                     }
 
                     // move all bodies to the children
-                    //ArrayList<Body> oldBodies = new ArrayList<>(node.getBodies());
-                    //node.getBodies().clear();
 
                     for (Body b : node.getBodies()) {
                         int childQuadrant = node.getQuad().findQuadrant(b.getPosition());
@@ -127,6 +137,35 @@ public class QuadTree
         }
     }
 
+    public void updateGravitationalAccelerationConcurrent(ArrayList<Body> bodies)
+    {
+        int chunkSize = (int) Math.ceil((double)bodies.size() / threadNum);
+        CountDownLatch latch = new CountDownLatch(threadNum);
+
+        for (int i = 0; i < threadNum; i++) {
+            int startIdx = i * chunkSize;
+            int endIdx = Math.min(startIdx + chunkSize, bodies.size());
+
+            executorService.execute(() -> {
+                try
+                {
+                    for (int j = startIdx; j < endIdx; j++) {
+                        Body body = bodies.get(j);
+                        body.getAcceleration().set(0, 0);
+                        applyForce(0, body, body.getAcceleration());
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        try {
+            latch.await();  // block main thread till latch is not 0
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
 
     private void applyForce(int nodeIndex, Body body, Vector2 acceleration)
@@ -135,7 +174,8 @@ public class QuadTree
         if (node.getMass() == 0) return;
         Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());    // distance vector between body and node's mass position
         float dSq = d.len2();   // squared length
-        float quadSizeSq = node.getQuad().getSize() * node.getQuad().getSize();
+        float quadSizeSq = (float)node.getQuad().getSize() * node.getQuad().getSize();
+        //if (quadSizeSq != 0) System.out.println("A");
         float thetaSq = theta * theta;
         float epsilonSq = epsilon * epsilon;
 
@@ -144,7 +184,7 @@ public class QuadTree
         }
 
         if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {  // compute acceleration by considering node total mass if leaf or met criteria
-            if (dSq > 0) {  // division by zero
+            if (dSq >= 0) {  // division by zero
                 float invDist = 1.0f / (float)Math.sqrt(dSq + epsilonSq);
                 float invDist3 = invDist * invDist * invDist;
                 acceleration.mulAdd(d, G * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)

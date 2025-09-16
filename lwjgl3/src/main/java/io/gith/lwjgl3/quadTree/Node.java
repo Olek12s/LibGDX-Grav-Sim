@@ -51,5 +51,4 @@ public class Node
         this.mass = 0.0f;
         this.bodies = new ArrayList<>(MAX_BODIES_PER_NODE);
     }
-
 }
