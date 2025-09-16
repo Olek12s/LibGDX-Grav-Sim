@@ -58,8 +58,7 @@ public class Main extends ApplicationAdapter {
         updatables.add(cameraController);
         logicInterval = 1f / MAX_UPS;
 
-        // <200k make parallel
-        galaxy(100000, 800f, 500_000_000f);
+        galaxy(200000, 800f, 500_000_000f);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
