@@ -15,6 +15,10 @@ import io.gith.lwjgl3.quadTree.QuadTree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main extends ApplicationAdapter {
     private static Main instance;
@@ -45,6 +49,8 @@ public class Main extends ApplicationAdapter {
     public ArrayList<Body> getParticles() {
         return particles;
     }
+
+
     public void create() {
         instance = this;
         particles = new ArrayList<>();
@@ -60,7 +66,87 @@ public class Main extends ApplicationAdapter {
         updatables.add(cameraController);
         logicInterval = 1f / MAX_UPS;
 
-        galaxy(100000, 4800f, 500_000_000f);
+        // <200k make parallel
+        galaxy(100_000, 4800f, 500_000_000f);
+
+
+
+        long strt = System.nanoTime();
+        int threadNum = Runtime.getRuntime().availableProcessors();
+        //int threadNum = 1;
+        int chunkSize = (int) Math.ceil((double)particles.size() / threadNum);
+        CountDownLatch latch = new CountDownLatch(threadNum);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
+
+        float[] localMinsX = new float[threadNum];
+        float[] localMaxsX = new float[threadNum];
+        float[] localMinsY = new float[threadNum];
+        float[] localMaxsY = new float[threadNum];
+
+        for (int i = 0; i < threadNum; i++) {
+            int startIdx = i * chunkSize;
+            int endIdx = Math.min(startIdx + chunkSize, particles.size());
+
+            localMinsX[i] = Float.MAX_VALUE;
+            localMaxsX[i] = -Float.MAX_VALUE;
+            localMinsY[i] = Float.MAX_VALUE;
+            localMaxsY[i] = -Float.MAX_VALUE;
+
+            int finalI = i;
+            executorService.execute(() -> {
+                try
+                {
+                    for (int j = startIdx; j < endIdx; j++) {
+                        Body particle = particles.get(j);
+                        localMinsX[finalI] = Math.min(localMinsX[finalI], particle.getPosition().x);
+                        localMaxsX[finalI] = Math.max(localMaxsX[finalI], particle.getPosition().x);
+                        localMinsY[finalI] = Math.min(localMinsY[finalI], particle.getPosition().y);
+                        localMaxsY[finalI] = Math.max(localMaxsY[finalI], particle.getPosition().y);
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        try {
+            latch.await();  // block main thread till latch is not 0
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
+        // merge results
+
+        float xMin = Float.MAX_VALUE;
+        float xMax = -Float.MAX_VALUE;
+        float yMin = Float.MAX_VALUE;
+        float yMax = -Float.MAX_VALUE;
+
+        for (int i = 0; i < threadNum; i++) {
+            xMin = Math.min(xMin, localMinsX[i]);
+            xMax = Math.max(xMax, localMaxsX[i]);
+            yMin = Math.min(yMin, localMinsY[i]);
+            yMax = Math.max(yMax, localMaxsY[i]);
+        }
+        long end = System.nanoTime();
+        System.out.println("Parallel: " + (end-strt) / 1_000_000);
+        System.out.printf("xMin=%.2f, xMax=%.2f, yMin=%.2f, yMax=%.2f%n", xMin, xMax, yMin, yMax);
+
+
+        strt = System.nanoTime();
+        xMin = Float.MAX_VALUE;
+        xMax = Float.MIN_VALUE;
+        yMin = Float.MAX_VALUE;
+        yMax = Float.MIN_VALUE;
+        for (Body b : particles) {
+            xMin = Math.min(xMin, b.getPosition().x);
+            xMax = Math.max(xMax, b.getPosition().x);
+            yMin = Math.min(yMin, b.getPosition().y);
+            yMax = Math.max(yMax, b.getPosition().y);
+        }
+        end = System.nanoTime();
+        System.out.println("Concurrent: " + (end-strt) / 1_000_000);
+        System.out.printf("xMin=%.2f, xMax=%.2f, yMin=%.2f, yMax=%.2f%n", xMin, xMax, yMin, yMax);
+        System.exit(1);
     }
 
     public void galaxy(int n, float radius, float centralMass) {

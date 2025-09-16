@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 public class QuadTree
 {
     private ArrayList<Node> nodes;  // [0] - root
-    public static final int maxDepth = 30;     //TODO: make it dynamic
+    public static final int maxDepth = 16;     //TODO: make it dynamic
     public static float theta = 0.5f;   // 0 - On^2
     public static float epsilon = 5.05f;
     public static float G = 6.67430e-3f;           // original G: G = 6.67430e-11f
