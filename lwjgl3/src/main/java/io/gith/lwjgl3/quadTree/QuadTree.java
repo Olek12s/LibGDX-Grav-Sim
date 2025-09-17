@@ -2,9 +2,9 @@ package io.gith.lwjgl3.quadTree;
 
 
 import com.badlogic.gdx.math.Vector2;
-import io.gith.lwjgl3.Main;
-import io.gith.lwjgl3.Renderable;
-import io.gith.lwjgl3.Updatable;
+import io.gith.lwjgl3.main.Main;
+import io.gith.lwjgl3.main.Renderable;
+import io.gith.lwjgl3.main.Updatable;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -15,9 +15,9 @@ public class QuadTree implements Renderable, Updatable
     private ArrayList<Node> nodes;                           // [0] - root
     public static float theta = 0.65f;                       // 0.1-1.0 range recommended. Higher value - less precision
     public static float epsilon = 26.05f;
-    public static float G = 6.67430e-5f;                     // original G: G = 6.67430e-11f
+    public static float G = 6.67430e-11f;                     // original G: G = 6.67430e-11f
     private static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
-    private static float accThreshold = 0.000001f;             // higher - violent bodies are affected. ~0.0001f recommended
+    private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
     private static boolean predictionsOn = true;             // true - predictionsOn are made
     private static ExecutorService executorService;
     private static int threadNum;

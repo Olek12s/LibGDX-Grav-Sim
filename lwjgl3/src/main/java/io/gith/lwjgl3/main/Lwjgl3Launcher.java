@@ -1,14 +1,7 @@
-package io.gith.lwjgl3;
+package io.gith.lwjgl3.main;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
-import imgui.ImGuiIO;
-import imgui.gl3.ImGuiImplGl3;
-import imgui.glfw.ImGuiImplGlfw;
-import imgui.internal.ImGui;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {

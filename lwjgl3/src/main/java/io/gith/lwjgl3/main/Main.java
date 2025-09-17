@@ -1,4 +1,4 @@
-package io.gith.lwjgl3;
+package io.gith.lwjgl3.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;

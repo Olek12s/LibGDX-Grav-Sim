@@ -1,4 +1,4 @@
-package io.gith.lwjgl3;
+package io.gith.lwjgl3.main;
 
 public interface Renderable
 {
