@@ -17,10 +17,10 @@ public class Main extends ApplicationAdapter {
 
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
-    private static int MAX_UPS = 30;   // logic updates per second
-    private static int MAX_FPS = 30;   // rendering frames per second
+    public static int MAX_UPS = 30;   // logic updates per second
+    public static int MAX_FPS = 30;   // rendering frames per second
     private static int SS = 1;
-    private float logicInterval;   // seconds per logic update
+    private float logicInterval = 1f / MAX_UPS;  // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
 
@@ -33,15 +33,13 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Body> particles;
     private QuadTree quadTree;
 
-    public static int getMaxUps() {return MAX_UPS;}
-    public static int getMaxFps() {return MAX_FPS;}
+
     public static Main getInstance() {return instance;}
     public InputController getInputController() {return inputController;}
     public CameraController getCameraController() {return cameraController;}
-    public ArrayList<Body> getParticles() {
-        return particles;
-    }
-
+    public ArrayList<Body> getParticles() {return particles;}
+    public ArrayList<Renderable> getRenderables() {return renderables;}
+    public ArrayList<Updatable> getUpdatables() {return updatables;}
 
     public void create() {
         instance = this;
@@ -50,15 +48,14 @@ public class Main extends ApplicationAdapter {
         updatables = new ArrayList<>();
         cameraController = new CameraController();
         inputController = new InputController();
-
         Resources.batch = new SpriteBatch();
         Gdx.input.setInputProcessor(inputController);
 
 
         updatables.add(cameraController);
-        logicInterval = 1f / MAX_UPS;
 
         galaxy(200000, 800f, 500_000_000f);
+        quadTree = new QuadTree(particles);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
@@ -67,7 +64,7 @@ public class Main extends ApplicationAdapter {
         renderables.add(central);
         updatables.add(central);
 
-        Body central2 = new Body(new Vector2(110, 541), new Vector2(0, 0), centralMass, Color.YELLOW);
+        Body central2 = new Body(new Vector2(1110, 541), new Vector2(0, 0), centralMass, Color.YELLOW);
         particles.add(central2);
         renderables.add(central2);
         updatables.add(central2);
@@ -113,12 +110,20 @@ public class Main extends ApplicationAdapter {
         accumulator += delta;
         fpsUpsTimer += delta;
 
-        while (accumulator >= logicInterval) {
+        int maxUpdatesPerFrame = MAX_UPS / MAX_FPS;
+        int updatesThisFrame = 0;
+
+        while (accumulator >= logicInterval && updatesThisFrame < maxUpdatesPerFrame) {
             for (Updatable u : updatables) {
                 u.update(logicInterval * SS);
             }
             accumulator -= logicInterval;
             updates++;
+            updatesThisFrame++;
+        }
+
+        if (updatesThisFrame == maxUpdatesPerFrame) {
+            accumulator = 0;
         }
 
         if (MAX_FPS > 0) {
@@ -152,46 +157,9 @@ public class Main extends ApplicationAdapter {
         Resources.batch.setProjectionMatrix(cameraController.getCamera().combined);
 
         Resources.batch.begin();
-
-
         for (Renderable r : renderables) {
             r.render();
         }
-
-        long start = System.nanoTime();
-        quadTree = new QuadTree(particles);
-
-
-
-        long t1 = System.nanoTime();
-        quadTree.insertBodyParallel(0, particles);
-
-        long t2 = System.nanoTime();
-        quadTree.updateMassDirstribution();
-        long t3 = System.nanoTime();
-        quadTree.updateGravitationalAccelerationParallel(particles);
-        //quadTree.updateGravitationalAcceleration(particles);
-        long t4 = System.nanoTime();
-
-        long eraseTime = t1 - start;
-        long insertTimeParallel = t2 - t1;
-        long massTime = t3 - t2;
-        long gravityTime = t4 - t3;
-        long totalTime = t4 - start;
-
-        System.out.println("Nodes: " + quadTree.getNodes().size());
-        System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float)eraseTime / totalTime)*100 + "%");
-        System.out.println("insert parallel: " + insertTimeParallel / 1_000 + " us | " + insertTimeParallel / 1_000_000 + " ms | " + ((float)insertTimeParallel / totalTime)*100 + "%");
-        System.out.println("mass distribution: " + massTime / 1_000 + " us | " + massTime / 1_000_000 + " ms | " + ((float)massTime / totalTime)*100 + "%");
-        System.out.println("gravitational acceleration: " + gravityTime / 1_000 + " us | " + gravityTime / 1_000_000 + " ms | " + ((float)gravityTime / totalTime)*100 + "%");
-        System.out.println("TOTAL: " + totalTime / 1_000 + " us | " + totalTime / 1_000_000 + " ms | " + ((float)totalTime / totalTime)*100 + "%");
-        System.out.println();
-
-        //quadTree.renderVisualization();
-        //quadTree.renderRootVisualization();
-
-
-
         Resources.batch.end();
     }
 

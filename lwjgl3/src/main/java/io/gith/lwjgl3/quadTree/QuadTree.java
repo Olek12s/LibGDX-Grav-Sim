@@ -2,18 +2,23 @@ package io.gith.lwjgl3.quadTree;
 
 
 import com.badlogic.gdx.math.Vector2;
+import io.gith.lwjgl3.Main;
+import io.gith.lwjgl3.Renderable;
+import io.gith.lwjgl3.Updatable;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
-public class QuadTree
+public class QuadTree implements Renderable, Updatable
 {
+    private ArrayList<Body> bodies;
     private ArrayList<Node> nodes;  // [0] - root
     public static float theta = 0.5f;   // 0 - On^2
-    public static float epsilon = 5.05f;
+    public static float epsilon = 2.05f;
     public static float G = 6.67430e-5f;           // original G: G = 6.67430e-11f
     private static ExecutorService executorService;
     private static int threadNum;
+    private static int counter = 0;
     static
     {
         threadNum = Runtime.getRuntime().availableProcessors();
@@ -26,7 +31,11 @@ public class QuadTree
     }
 
     public QuadTree(ArrayList<Body> bodies) {
-        nodes = new ArrayList<>(160000);
+        Main.getInstance().getRenderables().add(this);
+        Main.getInstance().getUpdatables().add(this);
+
+        nodes = new ArrayList<>(200000);
+        this.bodies = bodies;
         if (bodies.isEmpty()) {
             nodes.add(new Node(new Quad(new Vector2(0, 0), 1)));
             return;
@@ -47,13 +56,30 @@ public class QuadTree
         int powerOf2Size = 1;
         while (powerOf2Size < s) powerOf2Size *= 2;
         nodes.add(new Node(new Quad(center, powerOf2Size)));
-
-        //nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));  // 0x7FFF_FFFF int max
     }
 
-    public void erase() {
-        nodes.clear();
-        //nodes.add(new Node(new Quad(new Vector2(0, 0), (int)Math.pow(2, maxDepth))));
+    private void erase() {
+        nodes = new ArrayList<>(200000);
+        if (bodies.isEmpty()) {
+            nodes.add(new Node(new Quad(new Vector2(0, 0), 1)));
+            return;
+        }
+        float xMin = Float.MAX_VALUE, xMax = Float.MIN_VALUE;
+        float yMin = Float.MAX_VALUE, yMax = Float.MIN_VALUE;
+        for (Body b : bodies) {
+            if (b.getPosition().x < xMin) xMin = b.getPosition().x;
+            if (b.getPosition().x > xMax) xMax = b.getPosition().x;
+            if (b.getPosition().y < yMin) yMin = b.getPosition().y;
+            if (b.getPosition().y > yMax) yMax = b.getPosition().y;
+        }
+        float width = xMax - xMin;
+        float height = yMax - yMin;
+        float size = Math.max(width, height);
+        Vector2 center = new Vector2(xMin + width / 2f, yMin + height / 2f);
+        int s = (int) Math.ceil(size);
+        int powerOf2Size = 1;
+        while (powerOf2Size < s) powerOf2Size *= 2;
+        nodes.add(new Node(new Quad(center, powerOf2Size)));
     }
 
 
@@ -305,10 +331,6 @@ public class QuadTree
     }
 
 
-    public void renderVisualization() {
-        if (nodes.isEmpty()) return;
-        renderLeafSiblings(0);
-    }
 
     private boolean renderLeafSiblings(int nodeIndex) {
         Node node = nodes.get(nodeIndex);
@@ -350,5 +372,41 @@ public class QuadTree
     public void renderRootVisualization() {
         nodes.get(0).getQuad().render();
     }
+
+    @Override
+    public void update(float delta) {
+        long start = System.nanoTime();
+        erase();
+        long t1 = System.nanoTime();
+        insertBodyParallel(0, bodies);
+        long t2 = System.nanoTime();
+        updateMassDirstribution();
+        long t3 = System.nanoTime();
+       // updateGravitationalAccelerationParallel(bodies);
+        long t4 = System.nanoTime();
+
+        long eraseTime = t1 - start;
+        long insertTime = t2 - t1;
+        long massTime = t3 - t2;
+        long gravityTime = t4 - t3;
+        long totalTime = t4 - start;
+
+        if (counter % 30 == 0) {
+            System.out.println("Nodes: " + nodes.size());
+            System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float) eraseTime / totalTime) * 100 + "%");
+            System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float) insertTime / totalTime) * 100 + "%");
+            System.out.println("mass distribution: " + massTime / 1_000 + " us | " + massTime / 1_000_000 + " ms | " + ((float) massTime / totalTime) * 100 + "%");
+            System.out.println("gravitational acceleration: " + gravityTime / 1_000 + " us | " + gravityTime / 1_000_000 + " ms | " + ((float) gravityTime / totalTime) * 100 + "%");
+            System.out.println("TOTAL: " + totalTime / 1_000 + " us | " + totalTime / 1_000_000 + " ms | " + ((float) totalTime / totalTime) * 100 + "%");
+            System.out.println();
+        }
+        counter++;
+    }
+
+    @Override
+    public void render() {
+        renderRootVisualization();
+    }
+
 }
 
