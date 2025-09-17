@@ -12,10 +12,13 @@ import java.util.concurrent.*;
 public class QuadTree implements Renderable, Updatable
 {
     private ArrayList<Body> bodies;
-    private ArrayList<Node> nodes;  // [0] - root
-    public static float theta = 0.5f;   // 0 - On^2
-    public static float epsilon = 2.05f;
-    public static float G = 6.67430e-5f;           // original G: G = 6.67430e-11f
+    private ArrayList<Node> nodes;                           // [0] - root
+    public static float theta = 0.65f;                       // 0.1-1.0 range recommended. Higher value - less precision
+    public static float epsilon = 26.05f;
+    public static float G = 6.67430e-5f;                     // original G: G = 6.67430e-11f
+    private static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
+    private static float accThreshold = 0.000001f;             // higher - violent bodies are affected. ~0.0001f recommended
+    private static boolean predictionsOn = true;             // true - predictionsOn are made
     private static ExecutorService executorService;
     private static int threadNum;
     private static int counter = 0;
@@ -83,7 +86,7 @@ public class QuadTree implements Renderable, Updatable
     }
 
 
-    public void insertBodyParallel(int nodeIndex, ArrayList<Body> bodies) {
+    public void insertBodyParallel(int nodeIndex) {
         insertBodyParallel(nodeIndex, bodies, 0, 3);
     }
 
@@ -259,7 +262,7 @@ public class QuadTree implements Renderable, Updatable
         }
     }
 
-    public void updateGravitationalAccelerationParallel(ArrayList<Body> bodies)
+    public void updateGravitationalAccelerationParallel()
     {
         int chunkSize = (int) Math.ceil((double)bodies.size() / threadNum);
         CountDownLatch latch = new CountDownLatch(threadNum);
@@ -289,21 +292,30 @@ public class QuadTree implements Renderable, Updatable
         }
     }
 
-
     private void applyForce(int nodeIndex, Body body, Vector2 acceleration)
     {
+        //if (body.getAcceleration().len2() > 10000) System.out.println(body.getAcceleration().len2());
+        if (ThreadLocalRandom.current().nextDouble() < accPredictionRate    // ThreadLocalRandom for parallel computing
+            && body.getLastAcceleration().len2() < accThreshold
+            && predictionsOn)
+        {
+            acceleration.set(body.getLastAcceleration());
+            return;
+        }
+
         Node node = nodes.get(nodeIndex);
         if (node.getMass() == 0) return;
+
         Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());    // distance vector between body and node's mass position
         float dSq = d.len2();   // squared length
         float quadSizeSq = (float)node.getQuad().getSize() * node.getQuad().getSize();
-        //if (quadSizeSq != 0) System.out.println("A");
         float thetaSq = theta * theta;
         float epsilonSq = epsilon * epsilon;
 
         if (node.isLeaf() && node.getBodies().size() == 1 && node.getBodies().get(0) == body) {
             return; // ignore self
         }
+
 
         if (node.isLeaf() || quadSizeSq < dSq * thetaSq) {  // compute acceleration by considering node total mass if leaf or met criteria
             if (dSq >= 0) {  // division by zero
@@ -321,6 +333,7 @@ public class QuadTree implements Renderable, Updatable
                 }
             }
         }
+        body.setLastAcceleration(acceleration);
     }
     public void updateMassDirstribution()
     {
@@ -328,6 +341,18 @@ public class QuadTree implements Renderable, Updatable
         {
             updateMassAndCenter(0);
         }
+    }
+
+    private void updateBodies(float delta) {
+        for (Body body : bodies) {
+            body.update(delta);
+        }
+    }
+
+    public void addNewBody(Body body) {
+        Main.getInstance().getRenderables().add(body);
+        Main.getInstance().getUpdatables().add(body);
+        bodies.add(body);
     }
 
 
@@ -377,12 +402,13 @@ public class QuadTree implements Renderable, Updatable
     public void update(float delta) {
         long start = System.nanoTime();
         erase();
+        updateBodies(delta);
         long t1 = System.nanoTime();
-        insertBodyParallel(0, bodies);
+        insertBodyParallel(0);
         long t2 = System.nanoTime();
         updateMassDirstribution();
         long t3 = System.nanoTime();
-       // updateGravitationalAccelerationParallel(bodies);
+        updateGravitationalAccelerationParallel();
         long t4 = System.nanoTime();
 
         long eraseTime = t1 - start;
@@ -391,7 +417,7 @@ public class QuadTree implements Renderable, Updatable
         long gravityTime = t4 - t3;
         long totalTime = t4 - start;
 
-        if (counter % 30 == 0) {
+        if (counter % 10 == 0) {
             System.out.println("Nodes: " + nodes.size());
             System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float) eraseTime / totalTime) * 100 + "%");
             System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float) insertTime / totalTime) * 100 + "%");
@@ -405,7 +431,8 @@ public class QuadTree implements Renderable, Updatable
 
     @Override
     public void render() {
-        renderRootVisualization();
+      //  renderRootVisualization();
+      //  renderLeafSiblings(0);
     }
 
 }

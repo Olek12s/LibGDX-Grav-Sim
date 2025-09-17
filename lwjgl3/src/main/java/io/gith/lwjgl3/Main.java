@@ -54,20 +54,15 @@ public class Main extends ApplicationAdapter {
 
         updatables.add(cameraController);
 
-        galaxy(200000, 800f, 500_000_000f);
         quadTree = new QuadTree(particles);
+        galaxy(100000, 800f, 500_000_000f);
     }
 
     public void galaxy(int n, float radius, float centralMass) {
         Body central = new Body(new Vector2(0, 0), new Vector2(0, 0), centralMass, Color.YELLOW);
-        particles.add(central);
-        renderables.add(central);
-        updatables.add(central);
-
-        Body central2 = new Body(new Vector2(1110, 541), new Vector2(0, 0), centralMass, Color.YELLOW);
-        particles.add(central2);
-        renderables.add(central2);
-        updatables.add(central2);
+        quadTree.addNewBody(central);
+        Body central2 = new Body(new Vector2(1110, 541), new Vector2(-50, -40), centralMass, Color.YELLOW);
+        quadTree.addNewBody(central2);
 
         Random r = new Random();
         int arms = 8;
@@ -91,13 +86,11 @@ public class Main extends ApplicationAdapter {
             Body b = new Body(
                 new Vector2(x, y),
                 new Vector2(vx/4, vy/4),
-                Math.max(r.nextInt(100), 1),
+                Math.max(r.nextInt(100000), 1),
                 Color.LIGHT_GRAY
             );
 
-            particles.add(b);
-            renderables.add(b);
-            updatables.add(b);
+            quadTree.addNewBody(b);
         }
     }
 

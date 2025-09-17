@@ -14,6 +14,7 @@ public class Body implements Renderable, Updatable
     private Vector2 position;
     private Vector2 velocity;
     private Vector2 acceleration;
+    private Vector2 lastAcceleration;
     private float mass;
 
     private Color color;
@@ -21,15 +22,10 @@ public class Body implements Renderable, Updatable
 
     public Vector2 getPosition() {return position;}
     public Vector2 getVelocity() {return velocity;}
-
-    public Vector2 getAcceleration() {
-        return acceleration;
-    }
-
-    public void setAcceleration(Vector2 acceleration) {
-        this.acceleration = acceleration;
-    }
-
+    public Vector2 getAcceleration() {return acceleration;}
+    public Vector2 getLastAcceleration() {return lastAcceleration;}
+    public void setLastAcceleration(Vector2 acc) {this.lastAcceleration.set(acc);}
+    public void setAcceleration(Vector2 acceleration) {this.acceleration = acceleration;}
     public float getMass() {return mass;}
     public Color getColor() {return color;}
     public static Texture getTexture() {return texture;}
@@ -49,6 +45,7 @@ public class Body implements Renderable, Updatable
         this.mass = mass;
         this.color = color;
         this.acceleration = new Vector2();
+        this.lastAcceleration = new Vector2();
     }
 
     @Override
