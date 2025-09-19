@@ -7,6 +7,7 @@ import imgui.ImGuiIO;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import imgui.internal.ImGui;
+import io.gith.lwjgl3.quadTree.QuadTree;
 
 public class Gui implements Renderable
 {
@@ -19,11 +20,20 @@ public class Gui implements Renderable
         initImGui();
     }
 
+    private static float x = 0.0f;
     @Override
     public void render()
     {
         startImGui();
-        ImGui.button("I'm a Button!");
+
+        float[] tmp2 = {QuadTree.theta};
+        if (ImGui.sliderFloat("X (0..10)", tmp2, 0.0f, 10.0f)) {
+            x = tmp2[0];
+        }
+        QuadTree.theta = x;
+
+        // podgląd aktualnej wartości
+        ImGui.text("x = " + x);
         endImGui();
     }
 
