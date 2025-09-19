@@ -2,7 +2,11 @@ package io.gith.lwjgl3.main;
 
 public class Units
 {
+    public static float G = 6.67430e-11f;                     // original G: G = 6.67430e-11f        // 5
+
+    public static float year = 365*24*3600;
     public static float AU = 1.4959787e11f;     // meters
+
     public static float SUN_MASS = 1.989e30f;   // kg
     public static float LUNA_MASS = 7.347e22f;
     public static float MERCURY_MASS = 3.285e23f;

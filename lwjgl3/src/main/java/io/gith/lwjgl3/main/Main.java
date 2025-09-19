@@ -6,11 +6,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+import imgui.ImGui;
 import io.gith.lwjgl3.quadTree.Body;
 import io.gith.lwjgl3.quadTree.QuadTree;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+
 
 public class Main extends ApplicationAdapter {
     private static Main instance;
@@ -19,7 +22,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Updatable> updatables;
     public static int MAX_UPS = 30;   // logic updates per second
     public static int MAX_FPS = 30;   // rendering frames per second
-    private static int SS = 1;
+    private static int SS = 10000;
     private float logicInterval = 1f / MAX_UPS;  // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -30,6 +33,7 @@ public class Main extends ApplicationAdapter {
 
     private CameraController cameraController;
     private InputController inputController;
+    private Gui gui;
     private ArrayList<Body> particles;
     private QuadTree quadTree;
 
@@ -48,6 +52,7 @@ public class Main extends ApplicationAdapter {
         updatables = new ArrayList<>();
         cameraController = new CameraController();
         inputController = new InputController();
+        gui = new Gui();
         Resources.batch = new SpriteBatch();
         Gdx.input.setInputProcessor(inputController);
 
@@ -55,46 +60,7 @@ public class Main extends ApplicationAdapter {
         updatables.add(cameraController);
 
         quadTree = new QuadTree(particles);
-        galaxy(100000, 800f, 500_000_000f);
     }
-
-    public void galaxy(int n, float radius, float centralMass) {
-        Body central = new Body(new Vector2(0, 0), new Vector2(0, 0), centralMass, Color.YELLOW);
-        quadTree.addNewBody(central);
-        Body central2 = new Body(new Vector2(1110, 541), new Vector2(-50, -40), centralMass, Color.YELLOW);
-        quadTree.addNewBody(central2);
-
-        Random r = new Random();
-        int arms = 8;
-        float spiralTightness = 0.5f;
-        float angleJitter = 0.2f;
-
-        for (int i = 0; i < n; i++) {
-            float dist = (float)(Math.pow(r.nextFloat(), 2) * radius);
-
-            int arm = r.nextInt(arms);
-            float angle = (float) (spiralTightness * Math.log(dist + 1) + (2 * Math.PI / arms) * arm);
-            angle += r.nextGaussian() * angleJitter;
-
-            float x = (float) Math.cos(angle) * dist;
-            float y = (float) Math.sin(angle) * dist;
-
-            float speed = (float) Math.sqrt(QuadTree.G * centralMass / (dist + QuadTree.epsilon));
-            float vx = (float) (-Math.sin(angle) * speed);
-            float vy = (float) ( Math.cos(angle) * speed);
-
-            Body b = new Body(
-                new Vector2(x, y),
-                new Vector2(vx/4, vy/4),
-                Math.max(r.nextInt(100000), 1),
-                Color.LIGHT_GRAY
-            );
-
-            quadTree.addNewBody(b);
-        }
-    }
-
-
 
 
 
@@ -107,9 +73,14 @@ public class Main extends ApplicationAdapter {
         int updatesThisFrame = 0;
 
         while (accumulator >= logicInterval && updatesThisFrame < maxUpdatesPerFrame) {
+
+
+
             for (Updatable u : updatables) {
                 u.update(logicInterval * SS);
             }
+
+
             accumulator -= logicInterval;
             updates++;
             updatesThisFrame++;

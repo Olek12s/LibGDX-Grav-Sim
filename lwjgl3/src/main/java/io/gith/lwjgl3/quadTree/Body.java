@@ -4,10 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
-import io.gith.lwjgl3.main.Main;
-import io.gith.lwjgl3.main.Renderable;
-import io.gith.lwjgl3.main.Resources;
-import io.gith.lwjgl3.main.Updatable;
+import io.gith.lwjgl3.main.*;
 
 public class Body implements Renderable, Updatable
 {

@@ -4,6 +4,7 @@ package io.gith.lwjgl3.quadTree;
 import com.badlogic.gdx.math.Vector2;
 import io.gith.lwjgl3.main.Main;
 import io.gith.lwjgl3.main.Renderable;
+import io.gith.lwjgl3.main.Units;
 import io.gith.lwjgl3.main.Updatable;
 
 import java.util.ArrayList;
@@ -14,11 +15,10 @@ public class QuadTree implements Renderable, Updatable
     private ArrayList<Body> bodies;
     private ArrayList<Node> nodes;                           // [0] - root
     public static float theta = 0.65f;                       // 0.1-1.0 range recommended. Higher value - less precision
-    public static float epsilon = 26.05f;
-    public static float G = 6.67430e-11f;                     // original G: G = 6.67430e-11f
+    public static float epsilon = 10f;
     private static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
     private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
-    private static boolean predictionsOn = true;             // true - predictionsOn are made
+    private static boolean predictionsOn = false;             // true - predictionsOn are made
     private static ExecutorService executorService;
     private static int threadNum;
     private static int counter = 0;
@@ -321,7 +321,7 @@ public class QuadTree implements Renderable, Updatable
             if (dSq >= 0) {  // division by zero
                 float invDist = 1.0f / (float)Math.sqrt(dSq + epsilonSq);
                 float invDist3 = invDist * invDist * invDist;
-                acceleration.mulAdd(d, G * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)
+                acceleration.mulAdd(d, Units.G * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)
             }
         }
         else    // compute acceleration by checking the children, if node is not leaf and does not met criteria of θ (recursion)
@@ -431,8 +431,8 @@ public class QuadTree implements Renderable, Updatable
 
     @Override
     public void render() {
-      //  renderRootVisualization();
-      //  renderLeafSiblings(0);
+        renderRootVisualization();
+        renderLeafSiblings(0);
     }
 
 }
