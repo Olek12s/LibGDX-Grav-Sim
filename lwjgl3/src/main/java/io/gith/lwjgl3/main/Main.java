@@ -22,7 +22,7 @@ public class Main extends ApplicationAdapter {
     private ArrayList<Updatable> updatables;
     public static int MAX_UPS = 30;   // logic updates per second
     public static int MAX_FPS = 30;   // rendering frames per second
-    private static int SS = 10000;
+    public static int SS = 10000;
     private float logicInterval = 1f / MAX_UPS;  // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
@@ -44,6 +44,7 @@ public class Main extends ApplicationAdapter {
     public ArrayList<Body> getParticles() {return particles;}
     public ArrayList<Renderable> getRenderables() {return renderables;}
     public ArrayList<Updatable> getUpdatables() {return updatables;}
+    public QuadTree getQuadTree() {return quadTree;}
 
     public void create() {
         instance = this;

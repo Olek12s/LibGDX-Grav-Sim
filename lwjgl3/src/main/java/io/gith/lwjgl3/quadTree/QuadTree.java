@@ -16,11 +16,11 @@ public class QuadTree implements Renderable, Updatable
     private ArrayList<Node> nodes;                           // [0] - root
     public static float theta = 0.65f;                       // 0.1-1.0 range recommended. Higher value - less precision
     public static float epsilon = 10f;
-    private static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
+    public static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
     private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
-    private static boolean predictionsOn = false;             // true - predictionsOn are made
-    private static ExecutorService executorService;
-    private static int threadNum;
+    public static boolean predictionsOn = false;             // true - predictionsOn are made
+    public static ExecutorService executorService;
+    public static int threadNum;
     private static int counter = 0;
     static
     {
@@ -31,6 +31,10 @@ public class QuadTree implements Renderable, Updatable
 
     public ArrayList<Node> getNodes() {
         return nodes;
+    }
+
+    public ArrayList<Body> getBodies() {
+        return bodies;
     }
 
     public QuadTree(ArrayList<Body> bodies) {
@@ -61,7 +65,7 @@ public class QuadTree implements Renderable, Updatable
         nodes.add(new Node(new Quad(center, powerOf2Size)));
     }
 
-    private void erase() {
+   public void erase() {
         nodes = new ArrayList<>(200000);
         if (bodies.isEmpty()) {
             nodes.add(new Node(new Quad(new Vector2(0, 0), 1)));
