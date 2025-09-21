@@ -11,7 +11,7 @@ public class Node
     private float mass;
     private Vector2 massPosition;
     private Quad quad;
-    public static final int MAX_BODIES_PER_NODE = 1024;
+    public static final int MAX_BODIES_PER_NODE = 1;
     private ArrayList<Body> bodies;
 
     public Quad getQuad() {return quad;}

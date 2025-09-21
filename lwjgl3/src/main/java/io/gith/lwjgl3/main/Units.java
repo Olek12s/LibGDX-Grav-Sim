@@ -3,6 +3,7 @@ package io.gith.lwjgl3.main;
 public class Units
 {
     public static float G = 6.67430e-11f;                     // original G: G = 6.67430e-11f        // 5
+    public static float GMultiplier = 1f;
 
     public static float year = 365*24*3600;
     public static float AU = 1.4959787e11f;     // meters

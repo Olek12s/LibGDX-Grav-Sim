@@ -3,6 +3,8 @@ package io.gith.lwjgl3.main;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -48,5 +50,11 @@ public class CameraController implements Updatable
 
             input.resetDrag();
         }
+    }
+
+    public Vector2 screenToWorld(float screenX, float screenY) {
+        Vector3 screenCoords = new Vector3(screenX, screenY, 0);
+        Vector3 worldCoords = camera.unproject(screenCoords);
+        return new Vector2(worldCoords.x, worldCoords.y);
     }
 }

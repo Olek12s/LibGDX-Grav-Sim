@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import imgui.ImGui;
 import io.gith.lwjgl3.quadTree.Body;
 import io.gith.lwjgl3.quadTree.QuadTree;
 
@@ -20,35 +19,34 @@ public class Main extends ApplicationAdapter {
 
     private ArrayList<Renderable> renderables;
     private ArrayList<Updatable> updatables;
-    public static int MAX_UPS = 30;   // logic updates per second
-    public static int MAX_FPS = 30;   // rendering frames per second
-    public static int SS = 10000;
+    public static int MAX_UPS = 100;   // logic updates per second
+    public static int MAX_FPS = 100;   // rendering frames per second
+    public static int SS = 400;
     private float logicInterval = 1f / MAX_UPS;  // seconds per logic update
     private float accumulator = 0; // acc λt
     private long lastRenderTime = 0; // to limit FPS
 
-    private int frames = 0;
-    private int updates = 0;
-    private float fpsUpsTimer = 0f;
+    public static float currentFPS = 0;
+    public static float currentUPS = 0;
+    private long lastFrameTime = System.nanoTime();
+    private long lastUpdateTime = System.nanoTime();
 
     private CameraController cameraController;
     private InputController inputController;
     private Gui gui;
-    private ArrayList<Body> particles;
     private QuadTree quadTree;
+    private BodyCreator bodyCreator;
 
 
     public static Main getInstance() {return instance;}
     public InputController getInputController() {return inputController;}
     public CameraController getCameraController() {return cameraController;}
-    public ArrayList<Body> getParticles() {return particles;}
     public ArrayList<Renderable> getRenderables() {return renderables;}
     public ArrayList<Updatable> getUpdatables() {return updatables;}
     public QuadTree getQuadTree() {return quadTree;}
 
     public void create() {
         instance = this;
-        particles = new ArrayList<>();
         renderables = new ArrayList<>();
         updatables = new ArrayList<>();
         cameraController = new CameraController();
@@ -56,11 +54,11 @@ public class Main extends ApplicationAdapter {
         gui = new Gui();
         Resources.batch = new SpriteBatch();
         Gdx.input.setInputProcessor(inputController);
+        quadTree = new QuadTree();
+        bodyCreator = new BodyCreator(quadTree);
 
 
         updatables.add(cameraController);
-
-        quadTree = new QuadTree(particles);
     }
 
 
@@ -68,22 +66,15 @@ public class Main extends ApplicationAdapter {
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
         accumulator += delta;
-        fpsUpsTimer += delta;
 
         int maxUpdatesPerFrame = MAX_UPS / MAX_FPS;
         int updatesThisFrame = 0;
 
         while (accumulator >= logicInterval && updatesThisFrame < maxUpdatesPerFrame) {
-
-
-
             for (Updatable u : updatables) {
                 u.update(logicInterval * SS);
             }
-
-
             accumulator -= logicInterval;
-            updates++;
             updatesThisFrame++;
         }
 
@@ -105,15 +96,15 @@ public class Main extends ApplicationAdapter {
             }
             lastRenderTime = System.nanoTime();
         }
-        draw();
-        frames++;
+        long now = System.nanoTime();
+        currentUPS = updatesThisFrame / ((now - lastUpdateTime) / 1_000_000_000f);
+        lastUpdateTime = now;
 
-        if (fpsUpsTimer >= 1f) {
-            System.out.println("FPS: " + frames + " | UPS: " + updates);
-            frames = 0;
-            updates = 0;
-            fpsUpsTimer -= 1f;
-        }
+        draw();
+
+        long frameNow = System.nanoTime();
+        currentFPS = 1f / ((frameNow - lastFrameTime) / 1_000_000_000f);
+        lastFrameTime = frameNow;
     }
 
     private void draw() {

@@ -11,7 +11,9 @@ import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import imgui.ImGui;
 import imgui.type.ImBoolean;
+import imgui.type.ImFloat;
 import imgui.type.ImInt;
+import io.gith.lwjgl3.quadTree.Body;
 import io.gith.lwjgl3.quadTree.QuadTree;
 
 import java.util.concurrent.Executors;
@@ -22,12 +24,16 @@ public class Gui implements Renderable {
     private static ImGuiImplGl3 imGuiGl3;
     private static InputProcessor tmpProcessor;
 
-    private int[] threadVal = { Math.min(Runtime.getRuntime().availableProcessors() - (Runtime.getRuntime().availableProcessors())/4, Runtime.getRuntime().availableProcessors()) };
-    private float[] tmpTheta = {QuadTree.theta};
-    private float[] tmpEps = {QuadTree.epsilon};
-    private ImInt ssVal = new ImInt(Main.SS);
-    private float[] predictionRateVal = { QuadTree.accPredictionRate };
-    private ImBoolean predictions = new ImBoolean(QuadTree.predictionsOn);
+    private static int[] threadVal = { Math.min(Runtime.getRuntime().availableProcessors() - (Runtime.getRuntime().availableProcessors())/4, Runtime.getRuntime().availableProcessors()) };
+    private static float[] tmpTheta = {QuadTree.theta};
+    private static float[] tmpEps = {QuadTree.epsilon};
+    private static int[] ssVal = { Main.SS };
+    private static float[] predictionRateVal = { QuadTree.accPredictionRate };
+    private static ImBoolean predictions = new ImBoolean(QuadTree.predictionsOn);
+    private static ImBoolean renderTree = new ImBoolean(QuadTree.renderOn);
+    public static ImFloat massVal = new ImFloat(1);
+    public static ImInt bodyCount = new ImInt(1);
+
 
     public Gui() {
         Main.getInstance().getRenderables().add(this);
@@ -46,20 +52,32 @@ public class Gui implements Renderable {
 
         ImGui.begin("Config", windowFlags);
 
+
+        float minMultiplier = 1f;
+        float maxMultiplier = 1000000000f;
+        float[] tmpGMultiplier = { Units.GMultiplier };
+
+        if (ImGui.sliderFloat("G force multiplier", tmpGMultiplier, minMultiplier, maxMultiplier)) {
+            Units.GMultiplier = tmpGMultiplier[0];
+        }
+
+
+
+
         // Slider Theta
         if (ImGui.sliderFloat("Theta", tmpTheta, .0f, 5.0f)) {
             QuadTree.theta = tmpTheta[0];
         }
 
         // Slider Epsilon
-        if (ImGui.sliderFloat("Epsilon", tmpEps, 0.0f, 500.0f)) {
+        if (ImGui.sliderFloat("Epsilon", tmpEps, 0.0f, 5.0f)) {
             QuadTree.epsilon = tmpEps[0];
         }
 
 
         // SS
-        if (ImGui.inputInt("Sim speed", ssVal)) {
-            int val = ssVal.get();
+        if (ImGui.sliderInt("Sim speed", ssVal, 1, 5000)) {
+            int val = ssVal[0];
             val = Math.max(1, Math.min(val, 50000));
             Main.SS = val;
         }
@@ -88,11 +106,35 @@ public class Gui implements Renderable {
             QuadTree.predictionsOn = predictions.get();
         }
 
+        // Allow rendering quads
+        if (ImGui.checkbox("Allow rendering quads", renderTree)) {
+            QuadTree.renderOn = renderTree.get();
+        }
+
         // Remove Bodies Button
         if (ImGui.button("Remove bodies")) {
             Main.getInstance().getQuadTree().getBodies().clear();
             Main.getInstance().getQuadTree().erase();
         }
+        ImGui.text("");
+
+        // Mass
+        if (ImGui.inputFloat("Mass", massVal)) {
+            float val = massVal.get();
+            val = Math.max(0.0001f, Math.min(val, 10_000_000_000f));
+           // action
+        }
+
+        // Body count
+        if (ImGui.inputInt("Bodies per click", bodyCount)) {
+            int val = bodyCount.get();
+            val = Math.max(1, Math.min(val, 50000));
+            // action
+        }
+
+        ImGui.text("Current bodies: " + Main.getInstance().getQuadTree().getBodies().size());
+        ImGui.text(String.format("FPS: %.1f | UPS: %.1f", Main.currentFPS, Main.currentUPS));
+
 
         ImGui.end();
         endImGui();

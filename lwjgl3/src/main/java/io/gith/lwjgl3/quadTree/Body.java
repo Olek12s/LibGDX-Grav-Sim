@@ -37,6 +37,8 @@ public class Body implements Renderable, Updatable
     }
 
     public Body(Vector2 position, Vector2 velocity, float mass, Color color) {
+        //Main.getInstance().getUpdatables().add(this);
+        //Main.getInstance().getRenderables().add(this);
         this.position = position;
         this.velocity = velocity;
         this.mass = mass;

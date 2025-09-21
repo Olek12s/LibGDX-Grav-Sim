@@ -19,6 +19,7 @@ public class QuadTree implements Renderable, Updatable
     public static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
     private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
     public static boolean predictionsOn = false;             // true - predictionsOn are made
+    public static boolean renderOn = false;
     public static ExecutorService executorService;
     public static int threadNum;
     private static int counter = 0;
@@ -37,12 +38,12 @@ public class QuadTree implements Renderable, Updatable
         return bodies;
     }
 
-    public QuadTree(ArrayList<Body> bodies) {
+    public QuadTree() {
         Main.getInstance().getRenderables().add(this);
         Main.getInstance().getUpdatables().add(this);
 
         nodes = new ArrayList<>(200000);
-        this.bodies = bodies;
+        this.bodies = new ArrayList<>();
         if (bodies.isEmpty()) {
             nodes.add(new Node(new Quad(new Vector2(0, 0), 1)));
             return;
@@ -325,7 +326,7 @@ public class QuadTree implements Renderable, Updatable
             if (dSq >= 0) {  // division by zero
                 float invDist = 1.0f / (float)Math.sqrt(dSq + epsilonSq);
                 float invDist3 = invDist * invDist * invDist;
-                acceleration.mulAdd(d, Units.G * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)
+                acceleration.mulAdd(d, Units.G * Units.GMultiplier * node.getMass() * invDist3);  // multiply vec by scalar and add: t + (v * scalar)
             }
         }
         else    // compute acceleration by checking the children, if node is not leaf and does not met criteria of θ (recursion)
@@ -354,8 +355,6 @@ public class QuadTree implements Renderable, Updatable
     }
 
     public void addNewBody(Body body) {
-        Main.getInstance().getRenderables().add(body);
-        Main.getInstance().getUpdatables().add(body);
         bodies.add(body);
     }
 
@@ -435,8 +434,11 @@ public class QuadTree implements Renderable, Updatable
 
     @Override
     public void render() {
-        renderRootVisualization();
-        renderLeafSiblings(0);
+        for (Body b : bodies) b.render();
+        if (renderOn) {
+            renderRootVisualization();
+            renderLeafSiblings(0);
+        }
     }
 
 }
