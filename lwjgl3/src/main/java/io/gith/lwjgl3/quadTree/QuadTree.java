@@ -2,10 +2,7 @@ package io.gith.lwjgl3.quadTree;
 
 
 import com.badlogic.gdx.math.Vector2;
-import io.gith.lwjgl3.main.Main;
-import io.gith.lwjgl3.main.Renderable;
-import io.gith.lwjgl3.main.Units;
-import io.gith.lwjgl3.main.Updatable;
+import io.gith.lwjgl3.main.*;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -14,10 +11,11 @@ public class QuadTree implements Renderable, Updatable
 {
     private ArrayList<Body> bodies;
     private ArrayList<Node> nodes;                           // [0] - root
-    public static float theta = 0.65f;                       // 0.1-1.0 range recommended. Higher value - less precision
-    public static float epsilon = 10f;
+    public static float theta = 0.5f;                       // 0.1-1.0 range recommended. Higher value - less precision
+    public static float epsilon = 0.3f;
     public static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
     private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
+    public static float avgSpeed;
     public static boolean predictionsOn = false;             // true - predictionsOn are made
     public static boolean renderOn = false;
     public static ExecutorService executorService;
@@ -50,12 +48,19 @@ public class QuadTree implements Renderable, Updatable
         }
         float xMin = Float.MAX_VALUE, xMax = Float.MIN_VALUE;
         float yMin = Float.MAX_VALUE, yMax = Float.MIN_VALUE;
+
+        float totalSpeed = 0f;
         for (Body b : bodies) {
             if (b.getPosition().x < xMin) xMin = b.getPosition().x;
             if (b.getPosition().x > xMax) xMax = b.getPosition().x;
             if (b.getPosition().y < yMin) yMin = b.getPosition().y;
             if (b.getPosition().y > yMax) yMax = b.getPosition().y;
+
+            totalSpeed += b.getVelocity().len();
         }
+        QuadTree.avgSpeed = bodies.isEmpty() ? 1f : totalSpeed / bodies.size();
+
+
         float width = xMax - xMin;
         float height = yMax - yMin;
         float size = Math.max(width, height);
@@ -74,13 +79,20 @@ public class QuadTree implements Renderable, Updatable
         }
         float xMin = Float.MAX_VALUE, xMax = Float.MIN_VALUE;
         float yMin = Float.MAX_VALUE, yMax = Float.MIN_VALUE;
-        for (Body b : bodies) {
-            if (b.getPosition().x < xMin) xMin = b.getPosition().x;
-            if (b.getPosition().x > xMax) xMax = b.getPosition().x;
-            if (b.getPosition().y < yMin) yMin = b.getPosition().y;
-            if (b.getPosition().y > yMax) yMax = b.getPosition().y;
-        }
-        float width = xMax - xMin;
+
+       float totalSpeed = 0f;
+       for (Body b : bodies) {
+           if (b.getPosition().x < xMin) xMin = b.getPosition().x;
+           if (b.getPosition().x > xMax) xMax = b.getPosition().x;
+           if (b.getPosition().y < yMin) yMin = b.getPosition().y;
+           if (b.getPosition().y > yMax) yMax = b.getPosition().y;
+
+           totalSpeed += b.getVelocity().len();
+       }
+       QuadTree.avgSpeed = bodies.isEmpty() ? 1f : totalSpeed / bodies.size();
+
+
+       float width = xMax - xMin;
         float height = yMax - yMin;
         float size = Math.max(width, height);
         Vector2 center = new Vector2(xMin + width / 2f, yMin + height / 2f);
@@ -404,14 +416,22 @@ public class QuadTree implements Renderable, Updatable
     @Override
     public void update(float delta) {
         long start = System.nanoTime();
+        if (Gui.integrationMode[0] == 0) updateBodies(delta);  // for euler
+        if (Gui.integrationMode[0] == 1) {
+            for (Body b : bodies) {
+                b.leapFrogVStep(delta * 0.5f);
+                b.leapFrogPStep(delta);
+            }
+        }
+
         erase();
-        updateBodies(delta);
         long t1 = System.nanoTime();
         insertBodyParallel(0);
         long t2 = System.nanoTime();
         updateMassDirstribution();
         long t3 = System.nanoTime();
         updateGravitationalAccelerationParallel();
+        if (Gui.integrationMode[0] == 1)  for (Body b : bodies) b.leapFrogVStep(delta * 0.5f);
         long t4 = System.nanoTime();
 
         long eraseTime = t1 - start;

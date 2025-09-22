@@ -47,6 +47,7 @@ public class Body implements Renderable, Updatable
         this.lastAcceleration = new Vector2();
     }
 
+    /*
     @Override
     public void render() {
         float zoom = Main.getInstance().getCameraController().getCamera().zoom;
@@ -54,14 +55,51 @@ public class Body implements Renderable, Updatable
         Resources.batch.draw(texture, position.x - zoom/2f, position.y - zoom/2f, zoom, zoom);
         //Resources.batch.setColor(Color.WHITE);
     }
+    */
+
+    @Override
+    public void render() {
+        float zoom = Main.getInstance().getCameraController().getCamera().zoom;
+
+        float speed = velocity.len();
+        float minIntensity = 0.1f;
+
+
+        float normalizedSpeed = QuadTree.avgSpeed/4 > 0 ? speed / QuadTree.avgSpeed/4 : 1f;
+        float intensity = (float)Math.sqrt(Math.min(normalizedSpeed, 1f));
+
+
+        float maxDelta = 0.8f;
+        float finalIntensity = minIntensity + Math.min(intensity * (1f - minIntensity), maxDelta);
+
+        Color dynamicColor = new Color(0f, 0.9f, 0.9f, finalIntensity);
+
+        Resources.batch.setColor(dynamicColor);
+        Resources.batch.draw(texture, position.x - zoom / 2f, position.y - zoom / 2f, zoom, zoom);
+    }
 
     @Override
     public void update(float delta) {
+        euler(delta);   //  <-- euler method, updating bodies moved to the QuadTree class
+    }
+
+    private void euler(float delta) {
         velocity.x += acceleration.x * delta;
         velocity.y += acceleration.y * delta;
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
     }
+
+    public void leapFrogVStep(float halfDt) {
+        velocity.x += acceleration.x * halfDt;
+        velocity.y += acceleration.y * halfDt;
+    }
+
+    public void leapFrogPStep(float dt) {
+        position.x += velocity.x * dt;
+        position.y += velocity.y * dt;
+    }
+
 
     @Override
     public String toString() {

@@ -24,7 +24,7 @@ public class Gui implements Renderable {
     private static ImGuiImplGl3 imGuiGl3;
     private static InputProcessor tmpProcessor;
 
-    private static int[] threadVal = { Math.min(Runtime.getRuntime().availableProcessors() - (Runtime.getRuntime().availableProcessors())/4, Runtime.getRuntime().availableProcessors()) };
+    private static int[] threadVal = { Math.min(Runtime.getRuntime().availableProcessors(), Runtime.getRuntime().availableProcessors()) };
     private static float[] tmpTheta = {QuadTree.theta};
     private static float[] tmpEps = {QuadTree.epsilon};
     private static int[] ssVal = { Main.SS };
@@ -33,6 +33,7 @@ public class Gui implements Renderable {
     private static ImBoolean renderTree = new ImBoolean(QuadTree.renderOn);
     public static ImFloat massVal = new ImFloat(1);
     public static ImInt bodyCount = new ImInt(1);
+    public static int[] integrationMode = {1};  // 0 - Euler    // 1 - Leapfrog
 
 
     public Gui() {
@@ -54,7 +55,7 @@ public class Gui implements Renderable {
 
 
         float minMultiplier = 1f;
-        float maxMultiplier = 1000000000f;
+        float maxMultiplier = 100f;
         float[] tmpGMultiplier = { Units.GMultiplier };
 
         if (ImGui.sliderFloat("G force multiplier", tmpGMultiplier, minMultiplier, maxMultiplier)) {
@@ -65,12 +66,12 @@ public class Gui implements Renderable {
 
 
         // Slider Theta
-        if (ImGui.sliderFloat("Theta", tmpTheta, .0f, 5.0f)) {
+        if (ImGui.sliderFloat("Theta", tmpTheta, .000f, 5.0f)) {
             QuadTree.theta = tmpTheta[0];
         }
 
         // Slider Epsilon
-        if (ImGui.sliderFloat("Epsilon", tmpEps, 0.0f, 5.0f)) {
+        if (ImGui.sliderFloat("Epsilon", tmpEps, .001f, 10.0f)) {
             QuadTree.epsilon = tmpEps[0];
         }
 
@@ -111,6 +112,14 @@ public class Gui implements Renderable {
             QuadTree.renderOn = renderTree.get();
         }
 
+        ImGui.text("Integration:");
+        if (ImGui.radioButton("Euler", integrationMode[0] == 0)) {
+            integrationMode[0] = 0;
+        }
+        if (ImGui.radioButton("Leapfrog", integrationMode[0] == 1)) {
+            integrationMode[0] = 1;
+        }
+
         // Remove Bodies Button
         if (ImGui.button("Remove bodies")) {
             Main.getInstance().getQuadTree().getBodies().clear();
@@ -120,10 +129,14 @@ public class Gui implements Renderable {
 
         // Mass
         if (ImGui.inputFloat("Mass", massVal)) {
+
+            float minVal = 1f;
+            float maxVal = 99_000_000_000f;
             float val = massVal.get();
-            val = Math.max(0.0001f, Math.min(val, 10_000_000_000f));
-           // action
+            val = Math.max(minVal, Math.min(val, maxVal));
+            massVal.set(val);
         }
+
 
         // Body count
         if (ImGui.inputInt("Bodies per click", bodyCount)) {

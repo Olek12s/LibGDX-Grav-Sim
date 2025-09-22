@@ -60,7 +60,7 @@ public class BodyCreator implements Updatable {
     }
 
     private void addGalaxy(Vector2 center, int starCount, float totalMass) {
-        Body core = new Body(new Vector2(center), new Vector2(0, 0), totalMass, Color.YELLOW);
+        Body core = new Body(new Vector2(center), new Vector2(0, 0), totalMass, Color.PINK);
         quadTree.addNewBody(core);
 
 
@@ -69,7 +69,7 @@ public class BodyCreator implements Updatable {
 
         for (int i = 0; i < starCount; i++) {
 
-            float r = (float) (rng.nextFloat() * 200 + 50); // promień 50–250 (dopasuj)
+            float r = (float) (rng.nextFloat() * 200 + 50);
             float angle = (float) (rng.nextFloat() * Math.PI * 2);
             Vector2 pos = new Vector2(
                 center.x + (float)Math.cos(angle) * r,
