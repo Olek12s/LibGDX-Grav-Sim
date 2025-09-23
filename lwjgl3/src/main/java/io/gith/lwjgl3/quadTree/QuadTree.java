@@ -11,11 +11,11 @@ public class QuadTree implements Renderable, Updatable
 {
     private ArrayList<Body> bodies;
     private ArrayList<Node> nodes;                           // [0] - root
-    public static float theta = 0.5f;                       // 0.1-1.0 range recommended. Higher value - less precision
-    public static float epsilon = 0.3f;
-    public static float accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
-    private static float accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
-    public static float avgSpeed;
+    public static double theta = 0.5f;                       // 0.1-1.0 range recommended. Higher value - less precision
+    public static double epsilon = 0.3f;
+    public static double accPredictionRate = 0.25f;          // higher - more bodies affected by prediction
+    private static double accThreshold = 0.0000000000000001f;             // higher - violent bodies are affected. ~0.0001f recommended
+    public static double avgSpeed;
     public static boolean predictionsOn = false;             // true - predictionsOn are made
     public static boolean renderOn = false;
     public static ExecutorService executorService;
@@ -324,10 +324,10 @@ public class QuadTree implements Renderable, Updatable
         if (node.getMass() == 0) return;
 
         Vector2 d = new Vector2(node.getMassPosition()).sub(body.getPosition());    // distance vector between body and node's mass position
-        float dSq = d.len2();   // squared length
-        float quadSizeSq = (float)node.getQuad().getSize() * node.getQuad().getSize();
-        float thetaSq = theta * theta;
-        float epsilonSq = epsilon * epsilon;
+        double dSq = d.len2();   // squared length
+        double quadSizeSq = (float)node.getQuad().getSize() * node.getQuad().getSize();
+        double thetaSq = theta * theta;
+        double epsilonSq = epsilon * epsilon;
 
         if (node.isLeaf() && node.getBodies().size() == 1 && node.getBodies().get(0) == body) {
             return; // ignore self

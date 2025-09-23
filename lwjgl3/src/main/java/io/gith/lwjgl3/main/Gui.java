@@ -25,14 +25,17 @@ public class Gui implements Renderable {
     private static InputProcessor tmpProcessor;
 
     private static int[] threadVal = { Math.min(Runtime.getRuntime().availableProcessors(), Runtime.getRuntime().availableProcessors()) };
-    private static float[] tmpTheta = {QuadTree.theta};
-    private static float[] tmpEps = {QuadTree.epsilon};
+    private static float[] tmpTheta = {(float)QuadTree.theta};
+    private static float[] tmpEps = {(float)QuadTree.epsilon};
     private static int[] ssVal = { Main.SS };
-    private static float[] predictionRateVal = { QuadTree.accPredictionRate };
+    private static float[] predictionRateVal = { (float)QuadTree.accPredictionRate };
     private static ImBoolean predictions = new ImBoolean(QuadTree.predictionsOn);
     private static ImBoolean renderTree = new ImBoolean(QuadTree.renderOn);
     public static ImFloat massVal = new ImFloat(1);
     public static ImInt bodyCount = new ImInt(1);
+    public static ImInt bodyCountGalaxy = new ImInt(30000);
+    public static ImFloat galaxyCenterMass = new ImFloat(900_000_000f);
+    public static ImFloat starMass = new ImFloat(50f);
     public static int[] integrationMode = {1};  // 0 - Euler    // 1 - Leapfrog
 
 
@@ -71,7 +74,7 @@ public class Gui implements Renderable {
         }
 
         // Slider Epsilon
-        if (ImGui.sliderFloat("Epsilon", tmpEps, .001f, 10.0f)) {
+        if (ImGui.sliderFloat("Epsilon", tmpEps, .001f, 50.0f)) {
             QuadTree.epsilon = tmpEps[0];
         }
 
@@ -145,8 +148,30 @@ public class Gui implements Renderable {
             // action
         }
 
+        // Body count galaxy
+        if (ImGui.inputInt("Galaxy bodies", bodyCountGalaxy)) {
+            int val = bodyCountGalaxy.get();
+            val = Math.max(1, Math.min(val, 1000000));
+            // action
+        }
+
+        // Galaxy central mass
+        if (ImGui.inputFloat("Galaxy center mass", galaxyCenterMass)) {
+            float val = galaxyCenterMass.get();
+            val = Math.max(1, Math.min(val, 9000000000f));
+            // action
+        }
+
+        // Galaxy star mass
+        if (ImGui.inputFloat("Galaxy star mass", starMass)) {
+            float val = starMass.get();
+            val = Math.max(1, Math.min(val, 1000000));
+            // action
+        }
+
         ImGui.text("Current bodies: " + Main.getInstance().getQuadTree().getBodies().size());
         ImGui.text(String.format("FPS: %.1f | UPS: %.1f", Main.currentFPS, Main.currentUPS));
+        ImGui.text(String.format("Zoom: %.2f", Main.getInstance().getCameraController().getCamera().zoom));
 
 
         ImGui.end();

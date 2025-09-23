@@ -12,7 +12,7 @@ public class Body implements Renderable, Updatable
     private Vector2 velocity;
     private Vector2 acceleration;
     private Vector2 lastAcceleration;
-    private float mass;
+    private double mass;
 
     private Color color;
     private static Texture texture;
@@ -23,7 +23,7 @@ public class Body implements Renderable, Updatable
     public Vector2 getLastAcceleration() {return lastAcceleration;}
     public void setLastAcceleration(Vector2 acc) {this.lastAcceleration.set(acc);}
     public void setAcceleration(Vector2 acceleration) {this.acceleration = acceleration;}
-    public float getMass() {return mass;}
+    public double getMass() {return mass;}
     public Color getColor() {return color;}
     public static Texture getTexture() {return texture;}
 
@@ -36,7 +36,7 @@ public class Body implements Renderable, Updatable
         pixmap.dispose();
     }
 
-    public Body(Vector2 position, Vector2 velocity, float mass, Color color) {
+    public Body(Vector2 position, Vector2 velocity, double mass, Color color) {
         //Main.getInstance().getUpdatables().add(this);
         //Main.getInstance().getRenderables().add(this);
         this.position = position;
@@ -61,18 +61,18 @@ public class Body implements Renderable, Updatable
     public void render() {
         float zoom = Main.getInstance().getCameraController().getCamera().zoom;
 
-        float speed = velocity.len();
-        float minIntensity = 0.1f;
+        double speed = velocity.len();
+        double minIntensity = 0.2f;
 
 
-        float normalizedSpeed = QuadTree.avgSpeed/4 > 0 ? speed / QuadTree.avgSpeed/4 : 1f;
-        float intensity = (float)Math.sqrt(Math.min(normalizedSpeed, 1f));
+        double normalizedSpeed = QuadTree.avgSpeed/4 > 0 ? speed / QuadTree.avgSpeed/4 : 1f;
+        double intensity = (double)Math.sqrt(Math.min(normalizedSpeed, 1f));
 
 
-        float maxDelta = 0.8f;
-        float finalIntensity = minIntensity + Math.min(intensity * (1f - minIntensity), maxDelta);
+        double maxDelta = 0.8f;
+        double finalIntensity = minIntensity + Math.min(intensity * (1f - minIntensity), maxDelta);
 
-        Color dynamicColor = new Color(0f, 0.9f, 0.9f, finalIntensity);
+        Color dynamicColor = new Color(0f, 0.9f, 0.9f, (float)finalIntensity);
 
         Resources.batch.setColor(dynamicColor);
         Resources.batch.draw(texture, position.x - zoom / 2f, position.y - zoom / 2f, zoom, zoom);
