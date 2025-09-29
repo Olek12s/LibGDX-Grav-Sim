@@ -109,7 +109,7 @@ public class BodyCreator implements Updatable, Renderable {
                 center.y + (float) Math.sin(angle) * r
             );
 
-            float velMul = 1.3f;
+            float velMul = 0.7f;
             float vMag = (float) Math.sqrt(Units.G * Units.GMultiplier * coreMass / Math.max(r, 1f));
             Vector2 vel = new Vector2(-(float) Math.sin(angle)*velMul, (float) Math.cos(angle)*velMul).scl(vMag);
 
