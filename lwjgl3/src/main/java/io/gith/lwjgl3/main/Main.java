@@ -57,7 +57,6 @@ public class Main extends ApplicationAdapter {
         quadTree = new QuadTree();
         bodyCreator = new BodyCreator(quadTree);
 
-
         updatables.add(cameraController);
     }
 

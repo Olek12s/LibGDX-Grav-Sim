@@ -440,7 +440,7 @@ public class QuadTree implements Renderable, Updatable
         long gravityTime = t4 - t3;
         long totalTime = t4 - start;
 
-        if (counter % 10 == 0) {
+        if (counter % 60 == 0) {
             System.out.println("Nodes: " + nodes.size());
             System.out.println("create: " + eraseTime / 1_000 + " us | " + eraseTime / 1_000_000 + " ms | " + ((float) eraseTime / totalTime) * 100 + "%");
             System.out.println("insert: " + insertTime / 1_000 + " us | " + insertTime / 1_000_000 + " ms | " + ((float) insertTime / totalTime) * 100 + "%");

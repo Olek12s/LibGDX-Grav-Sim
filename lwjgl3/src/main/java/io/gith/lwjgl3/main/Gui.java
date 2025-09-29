@@ -34,8 +34,8 @@ public class Gui implements Renderable {
     public static ImFloat massVal = new ImFloat(1);
     public static ImInt bodyCount = new ImInt(1);
     public static ImInt bodyCountGalaxy = new ImInt(30000);
-    public static ImFloat galaxyCenterMass = new ImFloat(900_000_000f);
-    public static ImFloat starMass = new ImFloat(50f);
+    public static ImFloat galaxyCenterMass = new ImFloat(999_000_000_000f);
+    public static ImFloat starMass = new ImFloat(0.001f);
     public static int[] integrationMode = {1};  // 0 - Euler    // 1 - Leapfrog
 
 
@@ -133,8 +133,8 @@ public class Gui implements Renderable {
         // Mass
         if (ImGui.inputFloat("Mass", massVal)) {
 
-            float minVal = 1f;
-            float maxVal = 99_000_000_000f;
+            float minVal = 0.001f;
+            float maxVal = 999_000_000_000f;
             float val = massVal.get();
             val = Math.max(minVal, Math.min(val, maxVal));
             massVal.set(val);
@@ -158,14 +158,14 @@ public class Gui implements Renderable {
         // Galaxy central mass
         if (ImGui.inputFloat("Galaxy center mass", galaxyCenterMass)) {
             float val = galaxyCenterMass.get();
-            val = Math.max(1, Math.min(val, 9000000000f));
+            val = Math.max(1, Math.min(val, 999_000_000_000f));
             // action
         }
 
         // Galaxy star mass
         if (ImGui.inputFloat("Galaxy star mass", starMass)) {
             float val = starMass.get();
-            val = Math.max(1, Math.min(val, 1000000));
+            val = Math.max(0.001f, Math.min(val, 1000000));
             // action
         }
 
